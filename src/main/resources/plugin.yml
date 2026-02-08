@@ -1,0 +1,74 @@
+name: BestSupplies
+version: ${project.version}
+main: dev.joshlucem.nullithstudios.bestsupplies.BestSupplies
+api-version: '1.21'
+description: Centro de Abastecimiento - Recompensas diarias, banca semanal, raciones
+author: JoshLucem
+website: https://github.com/JoshLucem/BestSupplies
+
+depend:
+  - Vault
+
+softdepend:
+  - LuckPerms
+  - PlaceholderAPI
+  - ItemsAdder
+
+commands:
+  supplies:
+    description: Abre el Centro de Abastecimiento
+    usage: /<command> [daily|bank|food|status|pending|admin]
+    aliases: [suministros, abastecimiento]
+
+permissions:
+  bestsupplies.use:
+    description: Permite usar el comando /supplies
+    default: true
+  bestsupplies.daily:
+    description: Permite acceder a recompensas diarias
+    default: true
+  bestsupplies.bank:
+    description: Permite acceder a la banca semanal
+    default: true
+  bestsupplies.food:
+    description: Permite acceder a las raciones
+    default: true
+  bestsupplies.status:
+    description: Permite ver el estado personal
+    default: true
+  bestsupplies.pending:
+    description: Permite ver entregas pendientes
+    default: true
+  bestsupplies.admin:
+    description: Acceso a comandos de administrador
+    default: op
+  bestsupplies.rank.aventurero:
+    description: Rango Aventurero
+    default: false
+  bestsupplies.rank.boost:
+    description: Rango Boost
+    default: false
+  bestsupplies.rank.influencer:
+    description: Rango Influencer
+    default: false
+  bestsupplies.rank.coal:
+    description: Rango Coal
+    default: false
+  bestsupplies.rank.iron:
+    description: Rango Iron
+    default: false
+  bestsupplies.rank.gold:
+    description: Rango Gold
+    default: false
+  bestsupplies.rank.diamond:
+    description: Rango Diamond
+    default: false
+  bestsupplies.rank.emerald:
+    description: Rango Emerald
+    default: false
+  bestsupplies.rank.ruby:
+    description: Rango Ruby
+    default: false
+  bestsupplies.rank.netherite:
+    description: Rango Netherite
+    default: false

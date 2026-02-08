@@ -1,0 +1,117 @@
+# ==============================================
+# BestSupplies - Recompensas Diarias (Modelo B)
+# ==============================================
+# Días: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+# 
+# Cada día puede tener:
+#   money: cantidad de dinero
+#   items: lista de items (formato: "MATERIAL:cantidad" o "MATERIAL:cantidad:customModelData")
+#   commands: lista de comandos (ejecutados como consola, usar %player% para nombre)
+#   icon: material para mostrar en GUI (opcional, usa el primer item si no se especifica)
+#
+# Bonus por racha (streak):
+#   streak 0-2: recompensa base
+#   streak 3-6: +5% dinero o +1 item extra
+#   streak 7-13: +10% dinero o +2 items extra
+#   streak 14+: +15% dinero + bonus especial en hitos
+
+rewards:
+  MONDAY:
+    icon: BREAD
+    money: 150
+    items:
+      - "BREAD:8"
+      - "COOKED_BEEF:4"
+    display-name: "<#FFD700>Lunes - Provisiones</>"
+    description:
+      - "<gray>Comienza la semana con</gray>"
+      - "<gray>provisiones básicas.</gray>"
+
+  TUESDAY:
+    icon: IRON_INGOT
+    money: 175
+    items:
+      - "IRON_INGOT:4"
+      - "COAL:16"
+    display-name: "<#C0C0C0>Martes - Recursos</>"
+    description:
+      - "<gray>Materiales para tu</gray>"
+      - "<gray>aventura.</gray>"
+
+  WEDNESDAY:
+    icon: GOLDEN_APPLE
+    money: 200
+    items:
+      - "GOLDEN_APPLE:1"
+      - "COOKED_SALMON:8"
+    display-name: "<#FFD700>Miércoles - Festín</>"
+    description:
+      - "<gray>Una manzana dorada para</gray>"
+      - "<gray>mantenerte fuerte.</gray>"
+
+  THURSDAY:
+    icon: EXPERIENCE_BOTTLE
+    money: 175
+    items:
+      - "EXPERIENCE_BOTTLE:8"
+      - "BOOK:2"
+    display-name: "<#00FF00>Jueves - Conocimiento</>"
+    description:
+      - "<gray>Experiencia y sabiduría</gray>"
+      - "<gray>para encantamientos.</gray>"
+
+  FRIDAY:
+    icon: DIAMOND
+    money: 250
+    items:
+      - "DIAMOND:1"
+      - "LAPIS_LAZULI:16"
+    display-name: "<#00BFFF>Viernes - Tesoro</>"
+    description:
+      - "<gray>Recompensa especial</gray>"
+      - "<gray>de fin de semana.</gray>"
+
+  SATURDAY:
+    icon: EMERALD
+    money: 300
+    items:
+      - "EMERALD:2"
+      - "GOLD_INGOT:4"
+    display-name: "<#50C878>Sábado - Comercio</>"
+    description:
+      - "<gray>Recursos valiosos para</gray>"
+      - "<gray>comerciar.</gray>"
+
+  SUNDAY:
+    icon: NETHER_STAR
+    money: 400
+    items:
+      - "DIAMOND:2"
+      - "EMERALD:3"
+      - "GOLDEN_APPLE:2"
+    display-name: "<#FF69B4>Domingo - Gran Premio</>"
+    description:
+      - "<gray>La mejor recompensa</gray>"
+      - "<gray>de la semana!</gray>"
+
+# Bonus especiales en hitos de racha
+streak-milestones:
+  7:
+    # Semana completa
+    bonus-money: 500
+    bonus-items:
+      - "ENCHANTED_GOLDEN_APPLE:1"
+    message: "<gold>¡Una semana completa! Bonus especial otorgado.</gold>"
+  14:
+    # Dos semanas
+    bonus-money: 1000
+    bonus-items:
+      - "NETHERITE_SCRAP:1"
+    message: "<gold>¡Dos semanas de racha! Eres increíble.</gold>"
+  30:
+    # Un mes
+    bonus-money: 2500
+    bonus-items:
+      - "NETHERITE_INGOT:1"
+      - "TOTEM_OF_UNDYING:1"
+    message: "<gold>¡UN MES DE RACHA! Recompensa legendaria.</gold>"

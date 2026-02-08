@@ -1,0 +1,87 @@
+# ==============================================
+# BestSupplies - Configuración General
+# ==============================================
+
+# Zona horaria para calcular días y semanas
+# Ejemplos: America/Lima, America/Mexico_City, Europe/Madrid
+timezone: "America/Lima"
+
+# Base de datos
+database:
+  type: sqlite  # sqlite o mysql
+  # Configuración MySQL (solo si type: mysql)
+  mysql:
+    host: localhost
+    port: 3306
+    database: bestsupplies
+    username: root
+    password: ""
+    pool-size: 10
+
+# Configuración de reset semanal (para cheque de banca)
+weekly-reset:
+  day: MONDAY      # Día de reinicio: MONDAY, TUESDAY, etc.
+  hour: 0          # Hora (0-23)
+  minute: 0        # Minuto (0-59)
+
+# Intervalo de actualización de countdown en GUIs (en ticks, 20 = 1 segundo)
+gui-update-interval: 20
+
+# Modo de entrega del cheque semanal
+# true = entrega item "Cheque" canjeable
+# false = depósito directo con Vault
+use-cheque-item: true
+
+# Habilitar integración con PlaceholderAPI
+enable-placeholderapi: true
+
+# Habilitar iconos de ItemsAdder (si está instalado)
+enable-itemsadder-icons: false
+
+# Modo debug (más logs en consola)
+debug: false
+
+# Títulos de GUIs (soporta MiniMessage)
+gui-titles:
+  hub: "<gradient:#FFD700:#FFA500>Centro de Abastecimiento</gradient>"
+  daily: "<gradient:#87CEEB:#4169E1>Recompensas Diarias</gradient>"
+  bank: "<gradient:#32CD32:#228B22>Banca Semanal</gradient>"
+  food: "<gradient:#FF6347:#FF4500>Raciones</gradient>"
+  status: "<gradient:#DA70D6:#9932CC>Estado Personal</gradient>"
+  pending: "<gradient:#CD853F:#8B4513>Entregas Pendientes</gradient>"
+
+# Configuración de slots en GUIs (valores por defecto)
+gui-slots:
+  hub:
+    status: 13
+    daily: 21
+    bank: 23
+    food: 31
+    close: 49
+  daily:
+    streak: 13
+    claim-today: 31
+    week-start: 19  # Lunes en slot 19, Martes 20, etc.
+  bank:
+    rank-display: 13
+    cheque: 22
+    countdown: 31
+    back: 49
+  food:
+    pack-exploration: 20
+    pack-combat: 22
+    pack-work: 24
+    info: 13
+    back: 49
+
+# Material para decoración de GUIs
+decoration:
+  filler: WHITE_STAINED_GLASS_PANE
+  border: GRAY_STAINED_GLASS_PANE
+
+# Formato de tiempo para countdowns
+time-format:
+  days: "%dd "
+  hours: "%dh "
+  minutes: "%dm "
+  seconds: "%ds"

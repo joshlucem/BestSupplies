@@ -1,0 +1,321 @@
+# ==============================================
+# BestSupplies - Configuración de Rangos
+# ==============================================
+# Los rangos se verifican de mayor a menor prioridad.
+# El jugador obtiene el primer rango cuyo permiso tenga.
+#
+# Cada rango define:
+#   permission: permiso único requerido
+#   permissions: lista de permisos (jugador necesita CUALQUIERA de ellos)
+#   display-name: nombre mostrado en GUI
+#   weekly-money: dinero del cheque semanal
+#   food-cooldown: tiempo entre claims de raciones (ej: "24h", "18h", "12h")
+#   packs: packs de comida disponibles
+#
+# Para rangos de staff: usa 'permissions' con lista de grupos
+# Ejemplo: permissions: ["group.admin", "group.mod", "group.helper"]
+
+# Orden de prioridad (de mayor a menor)
+priority:
+  - netherite
+  - ruby
+  - emerald
+  - diamond
+  - gold
+  - iron
+  - coal
+  - influencer
+  - boost
+  - default
+
+ranks:
+  default:
+    permission: ""  # Sin permiso requerido, rango base
+    display-name: "<gray>Aventurero</gray>"
+    weekly-money: 500
+    food-cooldown: "24h"
+    packs:
+      exploracion:
+        display-name: "<green>Pack Exploración</green>"
+        icon: COMPASS
+        items:
+          - "BREAD:16"
+          - "TORCH:32"
+          - "COOKED_BEEF:8"
+      combate:
+        display-name: "<red>Pack Combate</red>"
+        icon: IRON_SWORD
+        items:
+          - "COOKED_PORKCHOP:16"
+          - "GOLDEN_APPLE:1"
+
+  boost:
+    permission: "bestsupplies.rank.boost"
+    display-name: "<#FF69B4>Boost</>"
+    weekly-money: 1000
+    food-cooldown: "20h"
+    packs:
+      exploracion:
+        display-name: "<green>Pack Exploración</green>"
+        icon: COMPASS
+        items:
+          - "BREAD:32"
+          - "TORCH:64"
+          - "COOKED_BEEF:16"
+      combate:
+        display-name: "<red>Pack Combate</red>"
+        icon: IRON_SWORD
+        items:
+          - "COOKED_PORKCHOP:24"
+          - "GOLDEN_APPLE:2"
+
+  influencer:
+    permission: "bestsupplies.rank.influencer"
+    display-name: "<#9400D3>Influencer</>"
+    weekly-money: 1250
+    food-cooldown: "18h"
+    packs:
+      exploracion:
+        display-name: "<green>Pack Exploración</green>"
+        icon: COMPASS
+        items:
+          - "BREAD:48"
+          - "TORCH:64"
+          - "COOKED_BEEF:24"
+          - "ENDER_PEARL:4"
+      combate:
+        display-name: "<red>Pack Combate</red>"
+        icon: IRON_SWORD
+        items:
+          - "COOKED_PORKCHOP:32"
+          - "GOLDEN_APPLE:3"
+      trabajo:
+        display-name: "<yellow>Pack Trabajo</yellow>"
+        icon: IRON_PICKAXE
+        items:
+          - "COOKED_BEEF:16"
+          - "BREAD:16"
+
+  coal:
+    permission: "bestsupplies.rank.coal"
+    display-name: "<dark_gray>Coal</dark_gray>"
+    weekly-money: 1500
+    food-cooldown: "18h"
+    packs:
+      exploracion:
+        display-name: "<green>Pack Exploración</green>"
+        icon: COMPASS
+        items:
+          - "BREAD:48"
+          - "TORCH:64"
+          - "COOKED_BEEF:24"
+          - "ENDER_PEARL:8"
+      combate:
+        display-name: "<red>Pack Combate</red>"
+        icon: IRON_SWORD
+        items:
+          - "COOKED_PORKCHOP:32"
+          - "GOLDEN_APPLE:4"
+          - "GOLDEN_CARROT:8"
+      trabajo:
+        display-name: "<yellow>Pack Trabajo</yellow>"
+        icon: IRON_PICKAXE
+        items:
+          - "COOKED_BEEF:24"
+          - "BREAD:24"
+          - "BAKED_POTATO:16"
+
+  iron:
+    permission: "bestsupplies.rank.iron"
+    display-name: "<white>Iron</white>"
+    weekly-money: 2000
+    food-cooldown: "16h"
+    packs:
+      exploracion:
+        display-name: "<green>Pack Exploración</green>"
+        icon: COMPASS
+        items:
+          - "BREAD:64"
+          - "TORCH:64"
+          - "COOKED_BEEF:32"
+          - "ENDER_PEARL:12"
+      combate:
+        display-name: "<red>Pack Combate</red>"
+        icon: IRON_SWORD
+        items:
+          - "COOKED_PORKCHOP:48"
+          - "GOLDEN_APPLE:6"
+          - "GOLDEN_CARROT:16"
+      trabajo:
+        display-name: "<yellow>Pack Trabajo</yellow>"
+        icon: IRON_PICKAXE
+        items:
+          - "COOKED_BEEF:32"
+          - "BREAD:32"
+          - "BAKED_POTATO:24"
+
+  gold:
+    permission: "bestsupplies.rank.gold"
+    display-name: "<gold>Gold</gold>"
+    weekly-money: 3000
+    food-cooldown: "14h"
+    packs:
+      exploracion:
+        display-name: "<green>Pack Exploración</green>"
+        icon: COMPASS
+        items:
+          - "BREAD:64"
+          - "TORCH:64"
+          - "COOKED_BEEF:48"
+          - "ENDER_PEARL:16"
+          - "GOLDEN_CARROT:8"
+      combate:
+        display-name: "<red>Pack Combate</red>"
+        icon: IRON_SWORD
+        items:
+          - "COOKED_PORKCHOP:64"
+          - "GOLDEN_APPLE:8"
+          - "GOLDEN_CARROT:24"
+      trabajo:
+        display-name: "<yellow>Pack Trabajo</yellow>"
+        icon: IRON_PICKAXE
+        items:
+          - "COOKED_BEEF:48"
+          - "BREAD:48"
+          - "BAKED_POTATO:32"
+          - "PUMPKIN_PIE:16"
+
+  diamond:
+    permission: "bestsupplies.rank.diamond"
+    display-name: "<aqua>Diamond</aqua>"
+    weekly-money: 5000
+    food-cooldown: "12h"
+    packs:
+      exploracion:
+        display-name: "<green>Pack Exploración</green>"
+        icon: COMPASS
+        items:
+          - "BREAD:64"
+          - "TORCH:64"
+          - "COOKED_BEEF:64"
+          - "ENDER_PEARL:24"
+          - "GOLDEN_CARROT:16"
+      combate:
+        display-name: "<red>Pack Combate</red>"
+        icon: DIAMOND_SWORD
+        items:
+          - "COOKED_PORKCHOP:64"
+          - "GOLDEN_APPLE:12"
+          - "GOLDEN_CARROT:32"
+          - "ENCHANTED_GOLDEN_APPLE:1"
+      trabajo:
+        display-name: "<yellow>Pack Trabajo</yellow>"
+        icon: DIAMOND_PICKAXE
+        items:
+          - "COOKED_BEEF:64"
+          - "BREAD:64"
+          - "BAKED_POTATO:48"
+          - "PUMPKIN_PIE:24"
+
+  emerald:
+    permission: "bestsupplies.rank.emerald"
+    display-name: "<green>Emerald</green>"
+    weekly-money: 7500
+    food-cooldown: "10h"
+    packs:
+      exploracion:
+        display-name: "<green>Pack Exploración</green>"
+        icon: COMPASS
+        items:
+          - "BREAD:64"
+          - "TORCH:64"
+          - "COOKED_BEEF:64"
+          - "ENDER_PEARL:32"
+          - "GOLDEN_CARROT:24"
+          - "CHORUS_FRUIT:16"
+      combate:
+        display-name: "<red>Pack Combate</red>"
+        icon: DIAMOND_SWORD
+        items:
+          - "COOKED_PORKCHOP:64"
+          - "GOLDEN_APPLE:16"
+          - "GOLDEN_CARROT:48"
+          - "ENCHANTED_GOLDEN_APPLE:2"
+      trabajo:
+        display-name: "<yellow>Pack Trabajo</yellow>"
+        icon: DIAMOND_PICKAXE
+        items:
+          - "COOKED_BEEF:64"
+          - "BREAD:64"
+          - "BAKED_POTATO:64"
+          - "PUMPKIN_PIE:32"
+          - "CAKE:2"
+
+  ruby:
+    permission: "bestsupplies.rank.ruby"
+    display-name: "<#FF0000>Ruby</>"
+    weekly-money: 10000
+    food-cooldown: "8h"
+    packs:
+      exploracion:
+        display-name: "<green>Pack Exploración</green>"
+        icon: COMPASS
+        items:
+          - "BREAD:64"
+          - "COOKED_BEEF:64"
+          - "ENDER_PEARL:48"
+          - "GOLDEN_CARROT:32"
+          - "CHORUS_FRUIT:32"
+      combate:
+        display-name: "<red>Pack Combate</red>"
+        icon: NETHERITE_SWORD
+        items:
+          - "COOKED_PORKCHOP:64"
+          - "GOLDEN_APPLE:24"
+          - "GOLDEN_CARROT:64"
+          - "ENCHANTED_GOLDEN_APPLE:3"
+      trabajo:
+        display-name: "<yellow>Pack Trabajo</yellow>"
+        icon: NETHERITE_PICKAXE
+        items:
+          - "COOKED_BEEF:64"
+          - "BREAD:64"
+          - "BAKED_POTATO:64"
+          - "PUMPKIN_PIE:48"
+          - "CAKE:4"
+
+  netherite:
+    permission: "bestsupplies.rank.netherite"
+    display-name: "<#4A4A4A>Netherite</>"
+    weekly-money: 15000
+    food-cooldown: "6h"
+    packs:
+      exploracion:
+        display-name: "<green>Pack Exploración Premium</green>"
+        icon: RECOVERY_COMPASS
+        items:
+          - "BREAD:64"
+          - "COOKED_BEEF:64"
+          - "ENDER_PEARL:64"
+          - "GOLDEN_CARROT:48"
+          - "CHORUS_FRUIT:48"
+          - "ENCHANTED_GOLDEN_APPLE:1"
+      combate:
+        display-name: "<red>Pack Combate Élite</red>"
+        icon: NETHERITE_SWORD
+        items:
+          - "COOKED_PORKCHOP:64"
+          - "GOLDEN_APPLE:32"
+          - "GOLDEN_CARROT:64"
+          - "ENCHANTED_GOLDEN_APPLE:5"
+          - "TOTEM_OF_UNDYING:1"
+      trabajo:
+        display-name: "<yellow>Pack Trabajo Maestro</yellow>"
+        icon: NETHERITE_PICKAXE
+        items:
+          - "COOKED_BEEF:64"
+          - "BREAD:64"
+          - "BAKED_POTATO:64"
+          - "PUMPKIN_PIE:64"
+          - "CAKE:8"
+          - "SUSPICIOUS_STEW:4"
