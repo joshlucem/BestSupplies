@@ -181,7 +181,7 @@ ranks:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/BestSupplies.git
+git clone https://github.com/joshlucem/BestSupplies.git
 
 # Navigate to project directory
 cd BestSupplies
@@ -200,11 +200,11 @@ mvn clean package
 
 ## License
 
-This project is proprietary software. All rights reserved.
+This project is licensed under the [MIT License](LICENSE).
 
 ## Support
 
-For support, please open an issue on GitHub or contact the development team.
+For support, please open an issue on GitHub.
 
 ---
 
