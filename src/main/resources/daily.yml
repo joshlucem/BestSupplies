@@ -1,117 +1,95 @@
+﻿# ==============================================
+# BestSupplies - Recompensas Diarias
 # ==============================================
-# BestSupplies - Recompensas Diarias (Modelo B)
-# ==============================================
-# Días: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
-# 
-# Cada día puede tener:
-#   money: cantidad de dinero
-#   items: lista de items (formato: "MATERIAL:cantidad" o "MATERIAL:cantidad:customModelData")
-#   commands: lista de comandos (ejecutados como consola, usar %player% para nombre)
-#   icon: material para mostrar en GUI (opcional, usa el primer item si no se especifica)
-#
-# Bonus por racha (streak):
-#   streak 0-2: recompensa base
-#   streak 3-6: +5% dinero o +1 item extra
-#   streak 7-13: +10% dinero o +2 items extra
-#   streak 14+: +15% dinero + bonus especial en hitos
+# Dias validos: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
 
 rewards:
   MONDAY:
     icon: BREAD
-    money: 150
+    money: 90
     items:
-      - "BREAD:8"
+      - "BREAD:6"
       - "COOKED_BEEF:4"
-    display-name: "<#FFD700>Lunes - Provisiones</>"
+    display-name: "<gold>Lunes - Provisiones</gold>"
     description:
-      - "<gray>Comienza la semana con</gray>"
-      - "<gray>provisiones básicas.</gray>"
+      - "<gray>Inicio de semana con recursos basicos.</gray>"
 
   TUESDAY:
     icon: IRON_INGOT
-    money: 175
+    money: 105
     items:
-      - "IRON_INGOT:4"
-      - "COAL:16"
-    display-name: "<#C0C0C0>Martes - Recursos</>"
+      - "IRON_INGOT:3"
+      - "COAL:12"
+    display-name: "<gray>Martes - Recursos</gray>"
     description:
-      - "<gray>Materiales para tu</gray>"
-      - "<gray>aventura.</gray>"
+      - "<gray>Materiales utiles para mineria y hornos.</gray>"
 
   WEDNESDAY:
-    icon: GOLDEN_APPLE
-    money: 200
+    icon: COOKED_SALMON
+    money: 120
     items:
-      - "GOLDEN_APPLE:1"
-      - "COOKED_SALMON:8"
-    display-name: "<#FFD700>Miércoles - Festín</>"
+      - "COOKED_SALMON:6"
+      - "GOLDEN_CARROT:4"
+    display-name: "<yellow>Miercoles - Suministros</yellow>"
     description:
-      - "<gray>Una manzana dorada para</gray>"
-      - "<gray>mantenerte fuerte.</gray>"
+      - "<gray>Comida para seguir activo.</gray>"
 
   THURSDAY:
     icon: EXPERIENCE_BOTTLE
-    money: 175
+    money: 115
     items:
-      - "EXPERIENCE_BOTTLE:8"
-      - "BOOK:2"
-    display-name: "<#00FF00>Jueves - Conocimiento</>"
+      - "EXPERIENCE_BOTTLE:6"
+      - "BOOK:1"
+    display-name: "<green>Jueves - Conocimiento</green>"
     description:
-      - "<gray>Experiencia y sabiduría</gray>"
-      - "<gray>para encantamientos.</gray>"
+      - "<gray>Ayuda para progresar encantamientos.</gray>"
 
   FRIDAY:
-    icon: DIAMOND
-    money: 250
+    icon: LAPIS_LAZULI
+    money: 140
     items:
       - "DIAMOND:1"
-      - "LAPIS_LAZULI:16"
-    display-name: "<#00BFFF>Viernes - Tesoro</>"
+      - "LAPIS_LAZULI:12"
+    display-name: "<aqua>Viernes - Tesoro</aqua>"
     description:
-      - "<gray>Recompensa especial</gray>"
-      - "<gray>de fin de semana.</gray>"
+      - "<gray>Recompensa de cierre de semana laboral.</gray>"
 
   SATURDAY:
     icon: EMERALD
-    money: 300
+    money: 160
     items:
-      - "EMERALD:2"
+      - "EMERALD:1"
       - "GOLD_INGOT:4"
-    display-name: "<#50C878>Sábado - Comercio</>"
+    display-name: "<green>Sabado - Comercio</green>"
     description:
-      - "<gray>Recursos valiosos para</gray>"
-      - "<gray>comerciar.</gray>"
+      - "<gray>Recursos utiles para intercambios.</gray>"
 
   SUNDAY:
     icon: NETHER_STAR
-    money: 400
+    money: 220
     items:
-      - "DIAMOND:2"
-      - "EMERALD:3"
-      - "GOLDEN_APPLE:2"
-    display-name: "<#FF69B4>Domingo - Gran Premio</>"
+      - "DIAMOND:1"
+      - "EMERALD:2"
+      - "GOLDEN_APPLE:1"
+    display-name: "<light_purple>Domingo - Gran Premio</light_purple>"
     description:
-      - "<gray>La mejor recompensa</gray>"
-      - "<gray>de la semana!</gray>"
+      - "<gray>Mejor recompensa semanal por constancia.</gray>"
 
-# Bonus especiales en hitos de racha
 streak-milestones:
   7:
-    # Semana completa
-    bonus-money: 500
+    bonus-money: 250
     bonus-items:
-      - "ENCHANTED_GOLDEN_APPLE:1"
-    message: "<gold>¡Una semana completa! Bonus especial otorgado.</gold>"
+      - "GOLDEN_APPLE:1"
+    message: "<gold>Semana completa de racha. Bonus otorgado.</gold>"
   14:
-    # Dos semanas
-    bonus-money: 1000
+    bonus-money: 600
+    bonus-items:
+      - "DIAMOND:2"
+      - "EXPERIENCE_BOTTLE:16"
+    message: "<gold>Dos semanas seguidas. Excelente constancia.</gold>"
+  30:
+    bonus-money: 1500
     bonus-items:
       - "NETHERITE_SCRAP:1"
-    message: "<gold>¡Dos semanas de racha! Eres increíble.</gold>"
-  30:
-    # Un mes
-    bonus-money: 2500
-    bonus-items:
-      - "NETHERITE_INGOT:1"
-      - "TOTEM_OF_UNDYING:1"
-    message: "<gold>¡UN MES DE RACHA! Recompensa legendaria.</gold>"
+      - "ANCIENT_DEBRIS:2"
+    message: "<gold>30 dias de racha. Recompensa legendaria.</gold>"

@@ -10,9 +10,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BankGui extends BaseGui {
+
+    private static final int DEFAULT_RANK_SLOT = 13;
+    private static final int DEFAULT_CHEQUE_SLOT = 22;
+    private static final int DEFAULT_COUNTDOWN_SLOT = 31;
+    private static final int DEFAULT_BACK_SLOT = 49;
 
     public BankGui(BestSupplies plugin, Player player) {
         super(plugin, player);
@@ -24,19 +30,12 @@ public class BankGui extends BaseGui {
         fillBorder(plugin.getConfigManager().getDecorationBorder());
         fillEmpty(plugin.getConfigManager().getDecorationFiller());
 
-        // Rank display (slot 13)
         buildRankDisplay();
-
-        // Cheque button (slot 22)
         buildChequeButton();
-
-        // Countdown display (slot 31)
         buildCountdownDisplay();
 
-        // Back button (slot 49)
-        setItem(49, createBackButton(), event -> {
-            plugin.getGuiManager().openHub(player);
-        });
+        int backSlot = getSlot("bank", "back", DEFAULT_BACK_SLOT);
+        setItem(backSlot, createBackButton(), event -> plugin.getGuiManager().openHub(player));
     }
 
     private void buildRankDisplay() {
@@ -48,131 +47,83 @@ public class BankGui extends BaseGui {
         placeholders.put("%rank%", rankName);
         placeholders.put("%amount%", Text.formatMoney(weeklyAmount));
 
-        List<String> lore = new ArrayList<>();
-        lore.add(plugin.getConfigManager().getMessage("bank.rank-display", placeholders));
-        lore.add(plugin.getConfigManager().getMessage("bank.weekly-amount", placeholders));
-
         ItemStack item = ItemParser.createItem(
             Material.NAME_TAG,
             plugin.getConfigManager().getMessage("gui.bank.rank-item"),
-            lore,
+            getMessageList("gui.bank.rank-lore", placeholders),
             null
         );
 
-        setItem(13, item);
+        int rankSlot = getSlot("bank", "rank-display", DEFAULT_RANK_SLOT);
+        setItem(rankSlot, item);
     }
 
     private void buildChequeButton() {
         boolean claimed = plugin.getBankService().hasClaimedWeekly(player);
         double amount = plugin.getBankService().getWeeklyAmount(player);
 
+        Map<String, String> placeholders = new HashMap<>();
+        placeholders.put("%amount%", Text.formatMoney(amount));
+
         ItemStack item;
         ClickAction action = null;
 
         if (!claimed) {
-            // Available to claim
-            List<String> lore = new ArrayList<>();
-            lore.add("<gray>Monto: <gold>$" + Text.formatMoney(amount) + "</gold></gray>");
-            lore.add("");
-            lore.add("<green>¡Clic para reclamar!</green>");
-
             item = ItemParser.createItem(
                 Material.PAPER,
                 plugin.getConfigManager().getMessage("gui.bank.cheque-available"),
-                lore,
+                getMessageList("gui.bank.cheque-available-lore", placeholders),
                 null
             );
-
             action = event -> claimCheque();
         } else {
-            // Already claimed
             Duration timeUntil = plugin.getTimeService().getTimeUntilWeeklyReset();
-            String timeStr = plugin.getTimeService().formatDuration(timeUntil);
-
-            List<String> lore = new ArrayList<>();
-            lore.add("<yellow>Ya reclamaste tu cheque esta semana.</yellow>");
-            lore.add("");
-            lore.add("<gray>Reinicia en: " + timeStr + "</gray>");
+            placeholders.put("%time%", plugin.getTimeService().formatDuration(timeUntil));
 
             item = ItemParser.createItem(
                 Material.MAP,
                 plugin.getConfigManager().getMessage("gui.bank.cheque-claimed"),
-                lore,
+                getMessageList("gui.bank.cheque-claimed-lore", placeholders),
                 null
             );
         }
 
-        setItem(22, item, action);
+        int chequeSlot = getSlot("bank", "cheque", DEFAULT_CHEQUE_SLOT);
+        setItem(chequeSlot, item, action);
     }
 
     private void buildCountdownDisplay() {
         Duration timeUntil = plugin.getTimeService().getTimeUntilWeeklyReset();
         String timeStr = plugin.getTimeService().formatDuration(timeUntil);
 
-        List<String> lore = new ArrayList<>();
-        lore.add("<gray>Tiempo restante: <aqua>" + timeStr + "</aqua></gray>");
-        lore.add("");
-        lore.add("<gray>Los cheques se reinician</gray>");
-        lore.add("<gray>cada semana.</gray>");
-
         ItemStack item = ItemParser.createItem(
             Material.CLOCK,
             plugin.getConfigManager().getMessage("gui.bank.countdown-item"),
-            lore,
+            getMessageList("gui.bank.countdown-lore", Map.of("%time%", timeStr)),
             null
         );
 
-        setItem(31, item);
+        int countdownSlot = getSlot("bank", "countdown", DEFAULT_COUNTDOWN_SLOT);
+        setItem(countdownSlot, item);
     }
 
     private void claimCheque() {
         BankService.ClaimResult result = plugin.getBankService().claimWeekly(player);
 
         if (result == BankService.ClaimResult.SUCCESS) {
-            // Refresh the GUI
-            build();
+            rebuild();
         } else if (result == BankService.ClaimResult.ALREADY_CLAIMED) {
-            Text.sendPrefixed(player, plugin.getConfigManager().getMessage("bank.already-claimed"),
-                plugin.getConfigManager());
+            Text.sendPrefixed(
+                player,
+                plugin.getConfigManager().getMessage("bank.already-claimed"),
+                plugin.getConfigManager()
+            );
         }
     }
 
     @Override
     public void updateCountdowns() {
-        // Update the countdown display
-        Duration timeUntil = plugin.getTimeService().getTimeUntilWeeklyReset();
-        String timeStr = plugin.getTimeService().formatDuration(timeUntil);
-
-        List<String> lore = new ArrayList<>();
-        lore.add("<gray>Tiempo restante: <aqua>" + timeStr + "</aqua></gray>");
-        lore.add("");
-        lore.add("<gray>Los cheques se reinician</gray>");
-        lore.add("<gray>cada semana.</gray>");
-
-        ItemStack countdownItem = ItemParser.createItem(
-            Material.CLOCK,
-            plugin.getConfigManager().getMessage("gui.bank.countdown-item"),
-            lore,
-            null
-        );
-
-        inventory.setItem(31, countdownItem);
-
-        // Also update cheque button if claimed (to show updated countdown)
-        if (plugin.getBankService().hasClaimedWeekly(player)) {
-            List<String> chequeLore = new ArrayList<>();
-            chequeLore.add("<yellow>Ya reclamaste tu cheque esta semana.</yellow>");
-            chequeLore.add("");
-            chequeLore.add("<gray>Reinicia en: " + timeStr + "</gray>");
-
-            ItemStack chequeItem = ItemParser.createItem(
-                Material.MAP,
-                plugin.getConfigManager().getMessage("gui.bank.cheque-claimed"),
-                chequeLore,
-                null
-            );
-
-            inventory.setItem(22, chequeItem);
-        }
+        buildChequeButton();
+        buildCountdownDisplay();
     }
 }

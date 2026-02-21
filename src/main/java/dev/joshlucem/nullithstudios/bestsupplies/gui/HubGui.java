@@ -6,9 +6,19 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class HubGui extends BaseGui {
+
+    private static final int DEFAULT_OVERVIEW_SLOT = 4;
+    private static final int DEFAULT_DAILY_SLOT = 20;
+    private static final int DEFAULT_BANK_SLOT = 22;
+    private static final int DEFAULT_FOOD_SLOT = 24;
+    private static final int DEFAULT_STATUS_SLOT = 30;
+    private static final int DEFAULT_PENDING_SLOT = 32;
+    private static final int DEFAULT_CLOSE_SLOT = 49;
 
     public HubGui(BestSupplies plugin, Player player) {
         super(plugin, player);
@@ -17,66 +27,130 @@ public class HubGui extends BaseGui {
 
     @Override
     protected void build() {
-        // Fill with decoration
         fillBorder(plugin.getConfigManager().getDecorationBorder());
         fillEmpty(plugin.getConfigManager().getDecorationFiller());
 
-        // Status button (slot 13)
-        int statusSlot = getSlot("hub", "status", 13);
-        ItemStack statusItem = ItemParser.createItem(
-            Material.PLAYER_HEAD,
-            plugin.getConfigManager().getMessage("gui.hub.status-item"),
-            plugin.getConfigManager().getMessageList("gui.hub.status-lore")
-        );
-        setItem(statusSlot, statusItem, event -> {
-            if (player.hasPermission("bestsupplies.status")) {
-                plugin.getGuiManager().openStatus(player);
-            }
-        });
+        buildOverview();
+        buildActions();
 
-        // Daily button (slot 21)
-        int dailySlot = getSlot("hub", "daily", 21);
-        ItemStack dailyItem = ItemParser.createItem(
-            Material.CHEST,
-            plugin.getConfigManager().getMessage("gui.hub.daily-item"),
-            plugin.getConfigManager().getMessageList("gui.hub.daily-lore")
-        );
-        setItem(dailySlot, dailyItem, event -> {
-            if (player.hasPermission("bestsupplies.daily")) {
-                plugin.getGuiManager().openDaily(player);
-            }
-        });
-
-        // Bank button (slot 23)
-        int bankSlot = getSlot("hub", "bank", 23);
-        ItemStack bankItem = ItemParser.createItem(
-            Material.GOLD_INGOT,
-            plugin.getConfigManager().getMessage("gui.hub.bank-item"),
-            plugin.getConfigManager().getMessageList("gui.hub.bank-lore")
-        );
-        setItem(bankSlot, bankItem, event -> {
-            if (player.hasPermission("bestsupplies.bank")) {
-                plugin.getGuiManager().openBank(player);
-            }
-        });
-
-        // Food button (slot 31)
-        int foodSlot = getSlot("hub", "food", 31);
-        ItemStack foodItem = ItemParser.createItem(
-            Material.COOKED_BEEF,
-            plugin.getConfigManager().getMessage("gui.hub.food-item"),
-            plugin.getConfigManager().getMessageList("gui.hub.food-lore")
-        );
-        setItem(foodSlot, foodItem, event -> {
-            if (player.hasPermission("bestsupplies.food")) {
-                plugin.getGuiManager().openFood(player);
-            }
-        });
-
-        // Close button (slot 49)
-        int closeSlot = getSlot("hub", "close", 49);
+        int closeSlot = getSlot("hub", "close", DEFAULT_CLOSE_SLOT);
         setItem(closeSlot, createCloseButton(), event -> {
             player.closeInventory();
         });
+    }
+
+    private void buildOverview() {
+        int overviewSlot = getSlot("hub", "overview", DEFAULT_OVERVIEW_SLOT);
+        String rankName = plugin.getRankService().getRankDisplayName(player);
+        int streak = plugin.getDailyService().getStreak(player);
+        int pendingCount = plugin.getPendingService().getPendingCount(player);
+        boolean weeklyClaimed = plugin.getBankService().hasClaimedWeekly(player);
+
+        Map<String, String> placeholders = new HashMap<>();
+        placeholders.put("%rank%", rankName);
+        placeholders.put("%streak%", String.valueOf(streak));
+        placeholders.put("%pending%", String.valueOf(pendingCount));
+        placeholders.put("%weekly_status%", weeklyClaimed
+            ? plugin.getConfigManager().getMessage("bank.claimed")
+            : plugin.getConfigManager().getMessage("bank.available"));
+
+        ItemStack overviewItem = ItemParser.createItem(
+            Material.BOOK,
+            plugin.getConfigManager().getMessage("gui.hub.overview-item"),
+            getMessageList("gui.hub.overview-lore", placeholders),
+            null
+        );
+        setItem(overviewSlot, overviewItem);
+    }
+
+    private void buildActions() {
+        int dailySlot = getSlot("hub", "daily", DEFAULT_DAILY_SLOT);
+        setItem(
+            dailySlot,
+            ItemParser.createItem(
+                Material.CHEST,
+                plugin.getConfigManager().getMessage("gui.hub.daily-item"),
+                plugin.getConfigManager().getMessageList("gui.hub.daily-lore")
+            ),
+            event -> {
+                if (!player.hasPermission("bestsupplies.daily")) {
+                    sendNoPermission();
+                    return;
+                }
+                plugin.getGuiManager().openDaily(player);
+            }
+        );
+
+        int bankSlot = getSlot("hub", "bank", DEFAULT_BANK_SLOT);
+        setItem(
+            bankSlot,
+            ItemParser.createItem(
+                Material.GOLD_INGOT,
+                plugin.getConfigManager().getMessage("gui.hub.bank-item"),
+                plugin.getConfigManager().getMessageList("gui.hub.bank-lore")
+            ),
+            event -> {
+                if (!player.hasPermission("bestsupplies.bank")) {
+                    sendNoPermission();
+                    return;
+                }
+                plugin.getGuiManager().openBank(player);
+            }
+        );
+
+        int foodSlot = getSlot("hub", "food", DEFAULT_FOOD_SLOT);
+        setItem(
+            foodSlot,
+            ItemParser.createItem(
+                Material.COOKED_BEEF,
+                plugin.getConfigManager().getMessage("gui.hub.food-item"),
+                plugin.getConfigManager().getMessageList("gui.hub.food-lore")
+            ),
+            event -> {
+                if (!player.hasPermission("bestsupplies.food")) {
+                    sendNoPermission();
+                    return;
+                }
+                plugin.getGuiManager().openFood(player);
+            }
+        );
+
+        int statusSlot = getSlot("hub", "status", DEFAULT_STATUS_SLOT);
+        setItem(
+            statusSlot,
+            ItemParser.createItem(
+                Material.PLAYER_HEAD,
+                plugin.getConfigManager().getMessage("gui.hub.status-item"),
+                plugin.getConfigManager().getMessageList("gui.hub.status-lore")
+            ),
+            event -> {
+                if (!player.hasPermission("bestsupplies.status")) {
+                    sendNoPermission();
+                    return;
+                }
+                plugin.getGuiManager().openStatus(player);
+            }
+        );
+
+        int pendingSlot = getSlot("hub", "pending", DEFAULT_PENDING_SLOT);
+        Map<String, String> placeholders = Map.of(
+            "%count%", String.valueOf(plugin.getPendingService().getPendingCount(player))
+        );
+        setItem(
+            pendingSlot,
+            ItemParser.createItem(
+                Material.CHEST_MINECART,
+                plugin.getConfigManager().getMessage("gui.hub.pending-item"),
+                getMessageList("gui.hub.pending-lore", placeholders),
+                null
+            ),
+            event -> {
+                if (!player.hasPermission("bestsupplies.pending")) {
+                    sendNoPermission();
+                    return;
+                }
+                plugin.getGuiManager().openPending(player);
+            }
+        );
     }
 }

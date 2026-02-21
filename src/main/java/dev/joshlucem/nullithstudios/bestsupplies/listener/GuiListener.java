@@ -53,9 +53,9 @@ public class GuiListener implements Listener {
             return;
         }
 
-        if (event.getInventory().getHolder() instanceof BaseGui) {
+        if (event.getInventory().getHolder() instanceof BaseGui gui) {
             // Clean up
-            plugin.getGuiManager().handleClose(player);
+            plugin.getGuiManager().handleClose(player, gui);
         }
     }
 }

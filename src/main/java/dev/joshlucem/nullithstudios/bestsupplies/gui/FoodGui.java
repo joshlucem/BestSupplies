@@ -10,12 +10,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class FoodGui extends BaseGui {
 
-    private static final int[] PACK_SLOTS = {20, 22, 24};
     private static final String[] PACK_IDS = {"exploracion", "combate", "trabajo"};
+    private static final String[] PACK_SLOT_KEYS = {"pack-exploration", "pack-combat", "pack-work"};
+    private static final int[] DEFAULT_PACK_SLOTS = {20, 22, 24};
+    private static final int DEFAULT_INFO_SLOT = 13;
+    private static final int DEFAULT_BACK_SLOT = 49;
 
     public FoodGui(BestSupplies plugin, Player player) {
         super(plugin, player);
@@ -27,38 +33,30 @@ public class FoodGui extends BaseGui {
         fillBorder(plugin.getConfigManager().getDecorationBorder());
         fillEmpty(plugin.getConfigManager().getDecorationFiller());
 
-        // Info display (slot 13)
         buildInfoDisplay();
-
-        // Food packs (slots 20, 22, 24)
         buildFoodPacks();
 
-        // Back button (slot 49)
-        setItem(49, createBackButton(), event -> {
-            plugin.getGuiManager().openHub(player);
-        });
+        int backSlot = getSlot("food", "back", DEFAULT_BACK_SLOT);
+        setItem(backSlot, createBackButton(), event -> plugin.getGuiManager().openHub(player));
     }
 
     private void buildInfoDisplay() {
         Duration cooldown = plugin.getFoodService().getCooldownDuration(player);
         String cooldownStr = plugin.getTimeService().formatDuration(cooldown);
 
-        Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("%time%", cooldownStr);
+        List<String> lore = new ArrayList<>(plugin.getConfigManager().getMessageList("gui.food.info-lore"));
+        lore.add("");
+        lore.add(plugin.getConfigManager().getMessage("food.pack-info", Map.of("%time%", cooldownStr)));
 
-        List<String> lore = plugin.getConfigManager().getMessageList("gui.food.info-lore");
-        List<String> processedLore = new ArrayList<>(lore);
-        processedLore.add("");
-        processedLore.add(plugin.getConfigManager().getMessage("food.pack-info", placeholders));
-
-        ItemStack item = ItemParser.createItem(
+        ItemStack info = ItemParser.createItem(
             Material.BOOK,
             plugin.getConfigManager().getMessage("gui.food.info-item"),
-            processedLore,
+            lore,
             null
         );
 
-        setItem(13, item);
+        int infoSlot = getSlot("food", "info", DEFAULT_INFO_SLOT);
+        setItem(infoSlot, info);
     }
 
     private void buildFoodPacks() {
@@ -66,28 +64,24 @@ public class FoodGui extends BaseGui {
 
         for (int i = 0; i < PACK_IDS.length; i++) {
             String packId = PACK_IDS[i];
-            int slot = PACK_SLOTS[i];
-
+            int slot = getSlot("food", PACK_SLOT_KEYS[i], DEFAULT_PACK_SLOTS[i]);
             FoodPackDefinition pack = availablePacks.get(packId);
-            
+
             if (pack == null) {
-                // Pack not available for this rank - show locked
-                ItemStack item = ItemParser.createItem(
+                ItemStack locked = ItemParser.createItem(
                     Material.GRAY_STAINED_GLASS_PANE,
-                    "<gray>Pack no disponible</gray>",
-                    List.of("<gray>Tu rango no tiene acceso</gray>", "<gray>a este pack.</gray>")
+                    plugin.getConfigManager().getMessage("gui.food.pack-locked"),
+                    plugin.getConfigManager().getMessageList("gui.food.pack-locked-lore")
                 );
-                setItem(slot, item);
+                setItem(slot, locked);
                 continue;
             }
 
             FoodService.PackStatus status = plugin.getFoodService().getPackStatus(player, packId);
-            ItemStack item = createPackItem(pack, status);
-
-            final String clickPackId = packId;
-            setItem(slot, item, event -> {
-                if (status == FoodService.PackStatus.READY) {
-                    claimPack(clickPackId);
+            setItem(slot, createPackItem(pack, status), event -> {
+                FoodService.PackStatus currentStatus = plugin.getFoodService().getPackStatus(player, packId);
+                if (currentStatus == FoodService.PackStatus.READY) {
+                    claimPack(packId);
                 }
             });
         }
@@ -97,27 +91,21 @@ public class FoodGui extends BaseGui {
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("%pack%", pack.getDisplayName());
 
-        List<String> lore = new ArrayList<>();
-
         if (status == FoodService.PackStatus.READY) {
-            // Available
-            lore.add("<green>¡DISPONIBLE!</green>");
-            lore.add("");
-
-            // Show pack contents with translated names
+            List<String> lore = new ArrayList<>();
+            lore.addAll(plugin.getConfigManager().getMessageList("gui.food.pack-available-lore"));
             lore.add("<gray>Contenido:</gray>");
+
             for (String itemStr : pack.getItems()) {
                 String[] parts = itemStr.split(":");
-                if (parts.length >= 2) {
-                    String materialId = parts[0].toUpperCase();
-                    String amount = parts[1];
-                    String itemName = plugin.getConfigManager().getItemName(materialId);
-                    lore.add("<gray>- " + amount + "x " + itemName + "</gray>");
+                if (parts.length < 2) {
+                    continue;
                 }
+                String materialId = parts[0].toUpperCase();
+                String amount = parts[1];
+                String itemName = plugin.getConfigManager().getItemName(materialId);
+                lore.add("<gray>- " + amount + "x " + itemName + "</gray>");
             }
-
-            lore.add("");
-            lore.add("<green>¡Clic para reclamar!</green>");
 
             return ItemParser.createItem(
                 pack.getIcon(),
@@ -125,60 +113,43 @@ public class FoodGui extends BaseGui {
                 lore,
                 null
             );
-        } else {
-            // On cooldown
-            String timeStr = plugin.getFoodService().formatTimeUntilAvailable(player, pack.getId());
-
-            lore.add("<red>EN ESPERA</red>");
-            lore.add("");
-            lore.add("<gray>Disponible en: <yellow>" + timeStr + "</yellow></gray>");
-
-            return ItemParser.createItem(
-                Material.GRAY_DYE,
-                plugin.getConfigManager().getMessage("gui.food.pack-cooldown", placeholders),
-                lore,
-                null
-            );
         }
+
+        String time = plugin.getFoodService().formatTimeUntilAvailable(player, pack.getId());
+        placeholders.put("%time%", time);
+
+        return ItemParser.createItem(
+            Material.GRAY_DYE,
+            plugin.getConfigManager().getMessage("gui.food.pack-cooldown", placeholders),
+            getMessageList("gui.food.pack-cooldown-lore", placeholders),
+            null
+        );
     }
 
     private void claimPack(String packId) {
         FoodService.ClaimResult result = plugin.getFoodService().claimPack(player, packId);
 
         if (result == FoodService.ClaimResult.SUCCESS) {
-            // Refresh the GUI
-            build();
+            rebuild();
+            return;
         }
+
+        if (result == FoodService.ClaimResult.COOLDOWN) {
+            String time = plugin.getFoodService().formatTimeUntilAvailable(player, packId);
+            Text.sendPrefixed(
+                player,
+                plugin.getConfigManager().getMessage("food.cooldown", Map.of("%time%", time)),
+                plugin.getConfigManager()
+            );
+            return;
+        }
+
+        Text.sendPrefixed(player, plugin.getConfigManager().getMessage("food.no-packs"), plugin.getConfigManager());
     }
 
     @Override
     public void updateCountdowns() {
-        // Update pack items to show updated cooldowns
-        Map<String, FoodPackDefinition> availablePacks = plugin.getFoodService().getAvailablePacks(player);
-
-        for (int i = 0; i < PACK_IDS.length; i++) {
-            String packId = PACK_IDS[i];
-            int slot = PACK_SLOTS[i];
-
-            FoodPackDefinition pack = availablePacks.get(packId);
-            if (pack == null) {
-                continue;
-            }
-
-            FoodService.PackStatus status = plugin.getFoodService().getPackStatus(player, packId);
-            
-            // Only update if on cooldown (countdown changes)
-            if (status == FoodService.PackStatus.COOLDOWN) {
-                ItemStack item = createPackItem(pack, status);
-                inventory.setItem(slot, item);
-            }
-        }
-    }
-
-    private String capitalizeFirst(String str) {
-        if (str == null || str.isEmpty()) {
-            return str;
-        }
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
+        buildInfoDisplay();
+        buildFoodPacks();
     }
 }

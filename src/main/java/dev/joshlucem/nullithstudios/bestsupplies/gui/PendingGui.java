@@ -10,11 +10,28 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class PendingGui extends BaseGui {
 
-    private List<PendingEntry> entries;
+    private static final int[] ENTRY_SLOTS = {
+        10, 11, 12, 13, 14, 15, 16,
+        19, 20, 21, 22, 23, 24, 25,
+        28, 29, 30, 31, 32, 33, 34,
+        37, 38, 39, 40, 41, 42, 43
+    };
+
+    private static final int PREV_PAGE_SLOT = 45;
+    private static final int WITHDRAW_ALL_SLOT = 46;
+    private static final int PAGE_INFO_SLOT = 47;
+    private static final int BACK_SLOT = 49;
+    private static final int NEXT_PAGE_SLOT = 53;
+
+    private List<PendingEntry> entries = List.of();
+    private int page = 0;
 
     public PendingGui(BestSupplies plugin, Player player) {
         super(plugin, player);
@@ -26,79 +43,54 @@ public class PendingGui extends BaseGui {
         fillBorder(plugin.getConfigManager().getDecorationBorder());
         fillEmpty(plugin.getConfigManager().getDecorationFiller());
 
-        // Load entries
         entries = plugin.getPendingService().getPendingEntries(player);
+        int totalPages = getTotalPages();
+
+        if (page >= totalPages) {
+            page = Math.max(0, totalPages - 1);
+        }
 
         if (entries.isEmpty()) {
-            // Empty state
             buildEmptyState();
         } else {
-            // Build entry items
             buildEntryItems();
         }
 
-        // Back button (slot 49)
-        setItem(49, createBackButton(), event -> {
-            plugin.getGuiManager().openHub(player);
-        });
+        buildControls(totalPages);
+    }
 
-        // Withdraw all button (slot 45) if there are entries
-        if (!entries.isEmpty()) {
-            buildWithdrawAllButton();
+    private int getTotalPages() {
+        if (entries.isEmpty()) {
+            return 1;
         }
+        return (int) Math.ceil((double) entries.size() / ENTRY_SLOTS.length);
     }
 
     private void buildEmptyState() {
         ItemStack item = ItemParser.createItem(
             Material.BARRIER,
-            "<gray>Sin entregas pendientes</gray>",
-            List.of(
-                plugin.getConfigManager().getMessage("pending.empty")
-            )
+            plugin.getConfigManager().getMessage("gui.pending.empty-item"),
+            List.of(plugin.getConfigManager().getMessage("pending.empty"))
         );
         setItem(22, item);
     }
 
     private void buildEntryItems() {
-        // Available slots for entries (10-16, 19-25, 28-34, 37-43)
-        int[] slots = {10, 11, 12, 13, 14, 15, 16, 
-                       19, 20, 21, 22, 23, 24, 25,
-                       28, 29, 30, 31, 32, 33, 34,
-                       37, 38, 39, 40, 41, 42, 43};
+        int startIndex = page * ENTRY_SLOTS.length;
+        int endIndex = Math.min(startIndex + ENTRY_SLOTS.length, entries.size());
 
-        int slotIndex = 0;
-        for (PendingEntry entry : entries) {
-            if (slotIndex >= slots.length) {
-                break; // Max entries shown
-            }
+        int slotCursor = 0;
+        for (int index = startIndex; index < endIndex; index++) {
+            PendingEntry entry = entries.get(index);
+            int slot = ENTRY_SLOTS[slotCursor++];
 
-            int slot = slots[slotIndex];
-            ItemStack item = createEntryItem(entry);
-            
-            final PendingEntry clickEntry = entry;
-            setItem(slot, item, event -> {
+            setItem(slot, createEntryItem(entry), event -> {
                 if (event.getClick() == ClickType.SHIFT_LEFT || event.getClick() == ClickType.SHIFT_RIGHT) {
-                    // Shift-click: withdraw all
                     withdrawAll();
                 } else {
-                    // Normal click: withdraw this entry
-                    withdrawEntry(clickEntry);
+                    withdrawEntry(entry);
                 }
             });
-
-            slotIndex++;
-        }
-
-        // Show count if more entries than slots
-        if (entries.size() > slots.length) {
-            int remaining = entries.size() - slots.length;
-            ItemStack moreItem = ItemParser.createItem(
-                Material.PAPER,
-                "<yellow>+" + remaining + " más...</yellow>",
-                List.of("<gray>Retira algunos items para ver más.</gray>")
-            );
-            // Put in last available slot
-            setItem(slots[slots.length - 1], moreItem);
         }
     }
 
@@ -110,39 +102,38 @@ public class PendingGui extends BaseGui {
         List<String> lore = new ArrayList<>();
 
         if (entry.getType() == PendingEntry.PendingType.ITEM) {
-            // Parse items to show preview
             List<ItemStack> items = JsonUtil.deserializeItems(entry.getPayload());
-            
+
             if (!items.isEmpty()) {
                 material = items.get(0).getType();
                 lore.add("<gray>Contenido:</gray>");
-                
+
                 int shown = 0;
                 for (ItemStack item : items) {
                     if (shown >= 5) {
-                        lore.add("<gray>... y " + (items.size() - shown) + " más</gray>");
+                        lore.add("<gray>... y " + (items.size() - shown) + " mas</gray>");
                         break;
                     }
-                    String name = item.getType().name().replace("_", " ").toLowerCase();
-                    lore.add("<gray>- " + item.getAmount() + "x " + capitalizeFirst(name) + "</gray>");
+                    String itemName = plugin.getConfigManager().getItemName(item.getType());
+                    lore.add("<gray>- " + item.getAmount() + "x " + itemName + "</gray>");
                     shown++;
                 }
             } else {
                 material = Material.CHEST;
-                lore.add("<gray>Items</gray>");
+                lore.add("<gray>Items sin detalle.</gray>");
             }
         } else if (entry.getType() == PendingEntry.PendingType.CHEQUE) {
             material = Material.PAPER;
             JsonUtil.ChequePayload cheque = JsonUtil.deserializeCheque(entry.getPayload());
             if (cheque != null) {
-                lore.add("<gray>Cheque por: <gold>$" + Text.formatMoney(cheque.amount()) + "</gold></gray>");
-                lore.add("<gray>Semana: " + cheque.weekKey() + "</gray>");
+                lore.add("<gray>Cheque: <gold>$" + Text.formatMoney(cheque.amount()) + "</gold></gray>");
+                lore.add("<gray>Periodo: " + cheque.weekKey() + "</gray>");
             } else {
-                lore.add("<gray>Cheque</gray>");
+                lore.add("<gray>Cheque sin datos.</gray>");
             }
         } else {
             material = Material.CHEST;
-            lore.add("<gray>Entrega</gray>");
+            lore.add("<gray>Entrega pendiente.</gray>");
         }
 
         lore.add("");
@@ -156,37 +147,62 @@ public class PendingGui extends BaseGui {
         );
     }
 
-    private void buildWithdrawAllButton() {
-        ItemStack item = ItemParser.createItem(
-            Material.HOPPER,
-            "<green>Retirar Todo</green>",
-            List.of(
-                "<gray>Retira todas las entregas</gray>",
-                "<gray>pendientes (si hay espacio).</gray>"
-            )
-        );
+    private void buildControls(int totalPages) {
+        setItem(BACK_SLOT, createBackButton(), event -> plugin.getGuiManager().openHub(player));
 
-        setItem(45, item, event -> withdrawAll());
+        ItemStack pageInfo = ItemParser.createItem(
+            Material.BOOK,
+            plugin.getConfigManager().getMessage("gui.pending.page-item", Map.of(
+                "%page%", String.valueOf(page + 1),
+                "%total%", String.valueOf(totalPages)
+            )),
+            plugin.getConfigManager().getMessageList("gui.pending.page-lore")
+        );
+        setItem(PAGE_INFO_SLOT, pageInfo);
+
+        if (!entries.isEmpty()) {
+            ItemStack withdrawAll = ItemParser.createItem(
+                Material.HOPPER,
+                plugin.getConfigManager().getMessage("gui.pending.withdraw-all-item"),
+                plugin.getConfigManager().getMessageList("gui.pending.withdraw-all-lore")
+            );
+            setItem(WITHDRAW_ALL_SLOT, withdrawAll, event -> withdrawAll());
+        } else {
+            setItem(WITHDRAW_ALL_SLOT, ItemParser.createFiller(plugin.getConfigManager().getDecorationFiller()));
+        }
+
+        if (page > 0) {
+            ItemStack prev = ItemParser.createItem(
+                Material.ARROW,
+                plugin.getConfigManager().getMessage("gui.pending.prev-page-item"),
+                null
+            );
+            setItem(PREV_PAGE_SLOT, prev, event -> {
+                page--;
+                rebuild();
+            });
+        }
+
+        if (page + 1 < totalPages) {
+            ItemStack next = ItemParser.createItem(
+                Material.ARROW,
+                plugin.getConfigManager().getMessage("gui.pending.next-page-item"),
+                null
+            );
+            setItem(NEXT_PAGE_SLOT, next, event -> {
+                page++;
+                rebuild();
+            });
+        }
     }
 
     private void withdrawEntry(PendingEntry entry) {
-        boolean success = plugin.getPendingService().withdrawPending(player, entry);
-        
-        // Refresh the GUI
-        build();
+        plugin.getPendingService().withdrawPending(player, entry);
+        rebuild();
     }
 
     private void withdrawAll() {
-        int withdrawn = plugin.getPendingService().withdrawAllPending(player);
-        
-        // Refresh the GUI
-        build();
-    }
-
-    private String capitalizeFirst(String str) {
-        if (str == null || str.isEmpty()) {
-            return str;
-        }
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
+        plugin.getPendingService().withdrawAllPending(player);
+        rebuild();
     }
 }

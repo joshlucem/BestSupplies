@@ -59,7 +59,7 @@ public class BankService {
      * Check if player has claimed their weekly cheque
      */
     public boolean hasClaimedWeekly(Player player) {
-        String weekKey = timeService.getCurrentWeekKey();
+        String weekKey = timeService.getCurrentWeeklyPeriodKey();
         return database.hasWeeklyClaim(player.getUniqueId().toString(), weekKey);
     }
 
@@ -89,7 +89,7 @@ public class BankService {
             return ClaimResult.NO_REWARD;
         }
 
-        String weekKey = timeService.getCurrentWeekKey();
+        String weekKey = timeService.getCurrentWeeklyPeriodKey();
         String playerUuid = player.getUniqueId().toString();
 
         // Mark as claimed
@@ -244,7 +244,7 @@ public class BankService {
      * Reset weekly claim for a player (admin)
      */
     public void resetWeeklyClaim(Player target) {
-        String weekKey = timeService.getCurrentWeekKey();
+        String weekKey = timeService.getCurrentWeeklyPeriodKey();
         database.resetWeeklyClaim(target.getUniqueId().toString(), weekKey);
         plugin.debug("Cheque semanal reseteado para " + target.getName());
     }
@@ -253,7 +253,7 @@ public class BankService {
      * Give a cheque directly to a player (admin)
      */
     public void giveCheque(Player target, double amount) {
-        String weekKey = timeService.getCurrentWeekKey();
+        String weekKey = timeService.getCurrentWeeklyPeriodKey();
         String chequeId = ChequeData.generateChequeId();
         String playerUuid = target.getUniqueId().toString();
 

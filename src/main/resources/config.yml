@@ -1,15 +1,14 @@
-# ==============================================
-# BestSupplies - Configuración General
+﻿# ==============================================
+# BestSupplies - Configuracion General
 # ==============================================
 
-# Zona horaria para calcular días y semanas
+# Zona horaria para calcular dias y semanas
 # Ejemplos: America/Lima, America/Mexico_City, Europe/Madrid
 timezone: "America/Lima"
 
 # Base de datos
 database:
   type: sqlite  # sqlite o mysql
-  # Configuración MySQL (solo si type: mysql)
   mysql:
     host: localhost
     port: 3306
@@ -18,30 +17,29 @@ database:
     password: ""
     pool-size: 10
 
-# Configuración de reset semanal (para cheque de banca)
+# Configuracion de reset semanal (cheque)
 weekly-reset:
-  day: MONDAY      # Día de reinicio: MONDAY, TUESDAY, etc.
-  hour: 0          # Hora (0-23)
-  minute: 0        # Minuto (0-59)
+  day: MONDAY
+  hour: 0
+  minute: 0
 
-# Intervalo de actualización de countdown en GUIs (en ticks, 20 = 1 segundo)
+# Intervalo de actualizacion de countdown en GUIs (ticks)
+# 20 ticks = 1 segundo
 gui-update-interval: 20
 
 # Modo de entrega del cheque semanal
-# true = entrega item "Cheque" canjeable
-# false = depósito directo con Vault
+# true = item canjeable
+# false = deposito directo por Vault
 use-cheque-item: true
 
-# Habilitar integración con PlaceholderAPI
+# Integraciones
 enable-placeholderapi: true
-
-# Habilitar iconos de ItemsAdder (si está instalado)
 enable-itemsadder-icons: false
 
-# Modo debug (más logs en consola)
+# Modo debug
 debug: false
 
-# Títulos de GUIs (soporta MiniMessage)
+# Titulos de GUIs (MiniMessage)
 gui-titles:
   hub: "<gradient:#FFD700:#FFA500>Centro de Abastecimiento</gradient>"
   daily: "<gradient:#87CEEB:#4169E1>Recompensas Diarias</gradient>"
@@ -50,36 +48,40 @@ gui-titles:
   status: "<gradient:#DA70D6:#9932CC>Estado Personal</gradient>"
   pending: "<gradient:#CD853F:#8B4513>Entregas Pendientes</gradient>"
 
-# Configuración de slots en GUIs (valores por defecto)
+# Configuracion de slots
+# Todos los valores son opcionales: si faltan, se usa fallback del codigo.
 gui-slots:
   hub:
-    status: 13
-    daily: 21
-    bank: 23
-    food: 31
+    overview: 4
+    daily: 20
+    bank: 22
+    food: 24
+    status: 30
+    pending: 32
     close: 49
   daily:
     streak: 13
     claim-today: 31
-    week-start: 19  # Lunes en slot 19, Martes 20, etc.
+    week-start: 19  # Monday en 19, Tuesday en 20, etc.
+    back: 49
   bank:
     rank-display: 13
     cheque: 22
     countdown: 31
     back: 49
   food:
+    info: 13
     pack-exploration: 20
     pack-combat: 22
     pack-work: 24
-    info: 13
     back: 49
 
-# Material para decoración de GUIs
+# Material para decoracion
 decoration:
   filler: WHITE_STAINED_GLASS_PANE
   border: GRAY_STAINED_GLASS_PANE
 
-# Formato de tiempo para countdowns
+# Formato de tiempo (reservado para futuras mejoras)
 time-format:
   days: "%dd "
   hours: "%dh "

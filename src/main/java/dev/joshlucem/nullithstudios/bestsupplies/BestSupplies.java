@@ -44,7 +44,7 @@ public class BestSupplies extends JavaPlugin {
         
         // Setup Vault economy
         if (!setupEconomy()) {
-            getLogger().severe("Vault no encontrado o sin economía. El plugin no puede funcionar.");
+            getLogger().severe("Vault no encontrado o sin economia. El plugin no puede funcionar.");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -76,7 +76,7 @@ public class BestSupplies extends JavaPlugin {
         if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI") 
                 && configManager.isPlaceholderApiEnabled()) {
             new BestSuppliesPlaceholders(this).register();
-            getLogger().info("PlaceholderAPI detectado y expansión registrada.");
+            getLogger().info("PlaceholderAPI detectado y expansion registrada.");
         }
         
         getLogger().info("BestSupplies habilitado correctamente.");
@@ -137,9 +137,8 @@ public class BestSupplies extends JavaPlugin {
 
     public void reload() {
         configManager.loadAll();
-        timeService = new TimeService(configManager);
-        rankService = new RankService(this, configManager);
-        getLogger().info("Configuración recargada.");
+        initializeServices();
+        getLogger().info("Configuracion recargada.");
     }
 
     public void debug(String message) {
@@ -196,3 +195,4 @@ public class BestSupplies extends JavaPlugin {
         return guiManager;
     }
 }
+

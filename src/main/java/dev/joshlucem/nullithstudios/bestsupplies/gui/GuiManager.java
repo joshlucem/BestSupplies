@@ -123,7 +123,11 @@ public class GuiManager {
     /**
      * Handle GUI close event
      */
-    public void handleClose(Player player) {
+    public void handleClose(Player player, BaseGui closedGui) {
+        BaseGui current = openGuis.get(player.getUniqueId());
+        if (current != closedGui) {
+            return;
+        }
         stopUpdateTask(player);
         openGuis.remove(player.getUniqueId());
     }

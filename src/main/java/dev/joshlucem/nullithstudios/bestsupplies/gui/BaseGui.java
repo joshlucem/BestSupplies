@@ -13,6 +13,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,17 @@ public abstract class BaseGui implements InventoryHolder {
     protected void init(String title, int rows) {
         Component titleComponent = Text.parse(title);
         this.inventory = Bukkit.createInventory(this, rows * 9, titleComponent);
+        rebuild();
+    }
+
+    /**
+     * Fully rebuild the GUI contents and click actions.
+     */
+    protected final void rebuild() {
+        clickActions.clear();
+        if (inventory != null) {
+            inventory.clear();
+        }
         build();
     }
 
@@ -82,6 +94,8 @@ public abstract class BaseGui implements InventoryHolder {
             inventory.setItem(slot, item);
             if (action != null) {
                 clickActions.put(slot, action);
+            } else {
+                clickActions.remove(slot);
             }
         }
     }
@@ -149,6 +163,34 @@ public abstract class BaseGui implements InventoryHolder {
             Material.BARRIER,
             plugin.getConfigManager().getMessage("gui.close-item"),
             null
+        );
+    }
+
+    /**
+     * Get a message list and apply placeholders.
+     */
+    protected List<String> getMessageList(String path, Map<String, String> placeholders) {
+        List<String> lines = plugin.getConfigManager().getMessageList(path);
+        if (lines.isEmpty() || placeholders == null || placeholders.isEmpty()) {
+            return lines;
+        }
+
+        List<String> processed = new ArrayList<>(lines.size());
+        for (String line : lines) {
+            String value = line;
+            for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+                value = value.replace(entry.getKey(), entry.getValue());
+            }
+            processed.add(value);
+        }
+        return processed;
+    }
+
+    protected void sendNoPermission() {
+        Text.sendPrefixed(
+            player,
+            plugin.getConfigManager().getMessage("general.no-permission"),
+            plugin.getConfigManager()
         );
     }
 

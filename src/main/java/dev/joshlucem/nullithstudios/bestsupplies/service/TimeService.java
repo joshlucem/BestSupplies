@@ -6,7 +6,6 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
-import java.util.Locale;
 
 public class TimeService {
 
@@ -14,12 +13,14 @@ public class TimeService {
     private final ZoneId timezone;
     private final DateTimeFormatter dateFormatter;
     private final WeekFields weekFields;
+    private final DateTimeFormatter weeklyPeriodFormatter;
 
     public TimeService(ConfigManager configManager) {
         this.configManager = configManager;
         this.timezone = configManager.getTimezone();
         this.dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         this.weekFields = WeekFields.ISO; // ISO weeks start on Monday
+        this.weeklyPeriodFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm");
     }
 
     /**
@@ -58,13 +59,10 @@ public class TimeService {
     }
 
     /**
-     * Get the current week key (e.g., "2026-W06")
+     * Get the current weekly period key aligned with configured reset day/hour/minute.
      */
     public String getCurrentWeekKey() {
-        LocalDate date = getCurrentDate();
-        int year = date.get(weekFields.weekBasedYear());
-        int week = date.get(weekFields.weekOfWeekBasedYear());
-        return String.format("%d-W%02d", year, week);
+        return getCurrentWeeklyPeriodKey();
     }
 
     /**
@@ -86,31 +84,38 @@ public class TimeService {
     }
 
     /**
-     * Get the next weekly reset time
+     * Get the last weekly reset time (the start of the current weekly claim period).
      */
-    public ZonedDateTime getNextWeeklyReset() {
+    public ZonedDateTime getLastWeeklyReset() {
         DayOfWeek resetDay = configManager.getWeeklyResetDay();
         int resetHour = configManager.getWeeklyResetHour();
         int resetMinute = configManager.getWeeklyResetMinute();
 
         ZonedDateTime now = getCurrentDateTime();
-        LocalDate today = now.toLocalDate();
+        LocalTime resetTime = LocalTime.of(resetHour, resetMinute);
 
-        // Find the next occurrence of reset day
-        LocalDate nextResetDate;
-        if (today.getDayOfWeek() == resetDay) {
-            // Check if reset time has passed today
-            LocalTime resetTime = LocalTime.of(resetHour, resetMinute);
-            if (now.toLocalTime().isBefore(resetTime)) {
-                nextResetDate = today;
-            } else {
-                nextResetDate = today.plusWeeks(1);
-            }
-        } else {
-            nextResetDate = today.with(TemporalAdjusters.next(resetDay));
+        LocalDate resetDate = now.toLocalDate().with(TemporalAdjusters.previousOrSame(resetDay));
+        ZonedDateTime lastReset = resetDate.atTime(resetTime).atZone(timezone);
+
+        if (lastReset.isAfter(now)) {
+            lastReset = lastReset.minusWeeks(1);
         }
 
-        return nextResetDate.atTime(resetHour, resetMinute).atZone(timezone);
+        return lastReset;
+    }
+
+    /**
+     * Get current weekly claim period key.
+     */
+    public String getCurrentWeeklyPeriodKey() {
+        return getLastWeeklyReset().format(weeklyPeriodFormatter);
+    }
+
+    /**
+     * Get the next weekly reset time
+     */
+    public ZonedDateTime getNextWeeklyReset() {
+        return getLastWeeklyReset().plusWeeks(1);
     }
 
     /**
