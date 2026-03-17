@@ -2,13 +2,10 @@
 # BestSupplies - Configuracion General
 # ==============================================
 
-# Zona horaria para calcular dias y semanas
-# Ejemplos: America/Lima, America/Mexico_City, Europe/Madrid
 timezone: "America/Lima"
 
-# Base de datos
 database:
-  type: sqlite  # sqlite o mysql
+  type: sqlite
   mysql:
     host: localhost
     port: 3306
@@ -17,73 +14,35 @@ database:
     password: ""
     pool-size: 10
 
-# Configuracion de reset semanal (cheque)
+# Legacy semanal (solo para funciones administrativas antiguas)
 weekly-reset:
   day: MONDAY
   hour: 0
   minute: 0
 
-# Intervalo de actualizacion de countdown en GUIs (ticks)
-# 20 ticks = 1 segundo
 gui-update-interval: 20
+use-cheque-item: false
 
-# Modo de entrega del cheque semanal
-# true = item canjeable
-# false = deposito directo por Vault
-use-cheque-item: true
-
-# Integraciones
 enable-placeholderapi: true
-enable-itemsadder-icons: false
+enable-itemsadder-icons: true
 
-# Modo debug
 debug: false
 
-# Titulos de GUIs (MiniMessage)
 gui-titles:
-  hub: "<gradient:#FFD700:#FFA500>Centro de Abastecimiento</gradient>"
-  daily: "<gradient:#87CEEB:#4169E1>Recompensas Diarias</gradient>"
-  bank: "<gradient:#32CD32:#228B22>Banca Semanal</gradient>"
-  food: "<gradient:#FF6347:#FF4500>Raciones</gradient>"
-  status: "<gradient:#DA70D6:#9932CC>Estado Personal</gradient>"
-  pending: "<gradient:#CD853F:#8B4513>Entregas Pendientes</gradient>"
+  hub: "<gold><bold>Supplies</bold></gold>"
+  daily: "<gold><bold>Recompensas Diarias</bold></gold>"
+  bank: "<gold><bold>Banca Mensual</bold></gold>"
+  food: "<gold><bold>Raciones</bold></gold>"
+  pending: "<gold><bold>Pendientes</bold></gold>"
 
-# Configuracion de slots
-# Todos los valores son opcionales: si faltan, se usa fallback del codigo.
-gui-slots:
-  hub:
-    overview: 4
-    daily: 20
-    bank: 22
-    food: 24
-    status: 30
-    pending: 32
-    close: 49
-  daily:
-    streak: 13
-    claim-today: 31
-    week-start: 19  # Monday en 19, Tuesday en 20, etc.
-    back: 49
-  bank:
-    rank-display: 13
-    cheque: 22
-    countdown: 31
-    back: 49
-  food:
-    info: 13
-    pack-exploration: 20
-    pack-combat: 22
-    pack-work: 24
-    back: 49
+itemsadder-icons:
+  daily-menu: "nullith:diamond"
+  monthly-bank-menu: "nullith:money_token"
+  nav-back: "_iainternal:icon_back_orange"
+  nav-next: "_iainternal:icon_next_orange"
+  nav-cancel: "_iainternal:icon_cancel"
+  lock: "mcicons:icon_lock"
 
-# Material para decoracion
 decoration:
   filler: WHITE_STAINED_GLASS_PANE
   border: GRAY_STAINED_GLASS_PANE
-
-# Formato de tiempo (reservado para futuras mejoras)
-time-format:
-  days: "%dd "
-  hours: "%dh "
-  minutes: "%dm "
-  seconds: "%ds"

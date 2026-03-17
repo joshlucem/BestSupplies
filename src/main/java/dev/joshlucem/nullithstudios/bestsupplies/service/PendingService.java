@@ -58,7 +58,7 @@ public class PendingService {
         String payload = JsonUtil.serializeCheque(chequeId, amount, weekKey);
         
         database.addPending(playerUuid, PendingEntry.PendingType.CHEQUE, payload);
-        plugin.debug("Guardado cheque pendiente para " + player.getName() + ": $" + amount);
+        plugin.debug("Guardado cheque pendiente para " + player.getName() + ": €" + amount);
         
         // Notify player
         Text.sendPrefixed(player, plugin.getConfigManager().getMessage("pending.saved-to-pending"), plugin.getConfigManager());

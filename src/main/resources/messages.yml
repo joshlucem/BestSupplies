@@ -1,8 +1,8 @@
 ﻿# ==============================================
-# BestSupplies - Mensajes (ES)
+# BestSupplies - Mensajes
 # ==============================================
 
-prefix: "<gradient:#FFD700:#FFA500>[BestSupplies]</gradient> "
+prefix: "<gold>[Supplies]</gold> "
 
 general:
   no-permission: "<red>No tienes permiso para hacer eso.</red>"
@@ -12,49 +12,34 @@ general:
   invalid-command: "<red>Comando invalido. Usa /supplies.</red>"
 
 daily:
-  available: "<green>DISPONIBLE</green>"
-  claimed: "<yellow>RECLAMADA</yellow>"
-  expired: "<red>EXPIRADA</red>"
-  locked: "<gray>BLOQUEADA</gray>"
-  unlock-in: "<gray>Se desbloquea en %time%</gray>"
   claim-success: "<green>Has reclamado tu recompensa diaria.</green>"
-  claim-money: "<gold>+$%amount%</gold>"
+  claim-money: "<gold>+€%amount%</gold>"
   already-claimed: "<yellow>Ya reclamaste la recompensa de hoy.</yellow>"
-  streak-info: "<aqua>Racha actual: %streak% dias</aqua>"
   streak-bonus: "<gold>Bonus de racha aplicado (+%bonus%%).</gold>"
   streak-milestone: "<gold>Hito de racha alcanzado.</gold>"
   streak-lost: "<red>Tu racha se reinicio por inactividad.</red>"
 
 bank:
-  available: "<green>Disponible</green>"
-  claimed: "<yellow>Reclamado</yellow>"
-  reset-in: "<gray>Reinicia en %time%</gray>"
+  monthly-claim-success: "<green>Reclamaste la banca mensual del dia %day% (+€%amount%).</green>"
   claim-success: "<green>Has reclamado tu cheque semanal.</green>"
-  cheque-received: "<gold>Recibiste un cheque por $%amount%.</gold>"
-  direct-deposit: "<gold>Se depositaron $%amount% en tu cuenta.</gold>"
-  already-claimed: "<yellow>Ya reclamaste tu cheque esta semana.</yellow>"
-  rank-display: "<gray>Tu rango: %rank%</gray>"
-  weekly-amount: "<gold>Monto semanal: $%amount%</gold>"
+  cheque-received: "<gold>Recibiste un cheque por €%amount%.</gold>"
+  direct-deposit: "<gold>Se depositaron €%amount% en tu cuenta.</gold>"
 
 cheque:
   item-name: "<gold>Cheque Semanal</gold>"
   lore:
-    - "<gray>Monto: <gold>$%amount%</gold></gray>"
-    - "<gray>Rango: %rank%</gray>"
+    - "<gray>Monto: <gold>€%amount%</gold></gray>"
+    - "<gray>Tag: %bestsupplies_rank_tag%</gray>"
     - "<gray>Periodo: %week%</gray>"
     - ""
     - "<yellow>Clic derecho para canjear</yellow>"
-  redeemed: "<green>Cheque canjeado. +$%amount%</green>"
+  redeemed: "<green>Cheque canjeado. +€%amount%</green>"
   invalid: "<red>Este cheque es invalido o ya no existe.</red>"
   not-owner: "<red>Este cheque no te pertenece.</red>"
   already-redeemed: "<red>Este cheque ya fue canjeado.</red>"
 
 food:
-  available: "<green>DISPONIBLE</green>"
-  cooldown: "<yellow>Ese pack estara disponible en %time%.</yellow>"
-  claim-success: "<green>Has reclamado el %pack%.</green>"
-  no-packs: "<yellow>No tienes packs disponibles para tu rango.</yellow>"
-  pack-info: "<gray>Reposicion cada %time%</gray>"
+  claim-success: "<green>Has reclamado %pack%.</green>"
 
 pending:
   empty: "<gray>No tienes entregas pendientes.</gray>"
@@ -62,168 +47,118 @@ pending:
   withdraw-success: "<green>Entrega retirada correctamente.</green>"
   withdraw-all-success: "<green>Se retiraron todas las entregas posibles.</green>"
   inventory-full: "<red>Inventario lleno. Libera espacio primero.</red>"
-  saved-to-pending: "<yellow>Tu inventario estaba lleno. Guardamos la entrega en pendientes.</yellow>"
-
-status:
-  title: "<gold>Estado Personal</gold>"
-  daily-status: "<gray>Diaria: %status%</gray>"
-  bank-status: "<gray>Cheque: %status%</gray>"
-  food-status: "<gray>Raciones: %status%</gray>"
-  pending-status: "<gray>Pendientes: %count%</gray>"
+  saved-to-pending: "<yellow>Inventario lleno. Guardamos la entrega en pendientes.</yellow>"
 
 placeholders:
-  daily-claimed: "reclamada"
-  daily-available: "disponible"
-  bank-claimed: "reclamado"
-  bank-available: "disponible"
-  food-unavailable: "sin-packs"
-  food-available: "disponible"
-  food-cooldown: "cooldown"
+  daily-claimed: "reclamadas"
+  daily-pending: "pendiente"
+  bank-claimed: "reclamadas"
+  bank-pending: "pendiente"
+  food-claimed: "reclamadas"
+  food-pending: "pendiente"
 
 gui:
   hub:
-    overview-item: "<gold>Resumen Rapido</gold>"
-    overview-lore:
-      - "<gray>Rango: %rank%</gray>"
-      - "<gray>Racha: <gold>%streak%</gold></gray>"
-      - "<gray>Pendientes: <yellow>%pending%</yellow></gray>"
-      - "<gray>Cheque: %weekly_status%</gray>"
-    status-item: "<aqua>Estado Personal</aqua>"
-    status-lore:
-      - "<gray>Vista completa de tu progreso,</gray>"
-      - "<gray>cooldowns y entregas.</gray>"
-    daily-item: "<yellow>Recompensas Diarias</yellow>"
+    daily-item: "<gold>Recompensas Diarias</gold>"
     daily-lore:
-      - "<gray>Reclama la recompensa del dia</gray>"
-      - "<gray>y conserva tu racha.</gray>"
-    bank-item: "<green>Banca Semanal</green>"
+      - "<gray>Consulta y reclama tu recompensa de hoy.</gray>"
+    bank-item: "<gold>Banca Mensual</gold>"
     bank-lore:
-      - "<gray>Reclama tu cheque semanal</gray>"
-      - "<gray>segun tu rango actual.</gray>"
-    food-item: "<red>Raciones</red>"
+      - "<gray>Reclama cada dia del mes segun tu rango.</gray>"
+    food-item: "<gold>Raciones</gold>"
     food-lore:
-      - "<gray>Obtiene packs de comida</gray>"
-      - "<gray>con cooldown por rango.</gray>"
-    pending-item: "<gold>Pendientes (%count%)</gold>"
+      - "<gray>Abre raciones con cooldown y bloqueos por rango.</gray>"
+    pending-item: "<gold>Pendientes</gold>"
     pending-lore:
-      - "<gray>Gestiona items y cheques</gray>"
-      - "<gray>guardados por falta de espacio.</gray>"
+      - "<gray>Tienes <yellow>%count%</yellow> entregas pendientes.</gray>"
+      - "<gray>Retira tus items guardados por inventario lleno.</gray>"
 
   daily:
-    streak-item: "<aqua>Tu Racha</aqua>"
-    streak-lore:
-      - "<gray>Dias consecutivos: <gold>%streak%</gold></gray>"
-      - "<gray>Bonus actual: <gold>+%bonus%%</gold></gray>"
-    claim-item: "<green>Reclamar Hoy</green>"
-    claim-lore:
-      - "<gray>Haz clic para cobrar</gray>"
-      - "<gray>la recompensa de hoy.</gray>"
-    claimed-item: "<yellow>Recompensa de hoy ya cobrada</yellow>"
-    claimed-lore:
-      - "<gray>Vuelve manana para continuar</gray>"
-      - "<gray>tu racha.</gray>"
-    unavailable-item: "<red>No disponible</red>"
-    unavailable-lore:
-      - "<gray>Solo puedes reclamar</gray>"
-      - "<gray>el dia actual.</gray>"
-    day-available: "<green>%day% - DISPONIBLE</green>"
-    day-claimed: "<yellow>%day% - RECLAMADA</yellow>"
-    day-expired: "<gray>%day% - EXPIRADA</gray>"
-    day-locked: "<red>%day% - BLOQUEADA</red>"
-    day-available-lore:
-      - ""
-      - "<green>Clic para reclamar</green>"
-    day-claimed-lore:
-      - "<gray>Esta recompensa ya fue cobrada.</gray>"
-    day-expired-lore:
-      - "<gray>Ese dia ya paso y no se puede reclamar.</gray>"
-    day-locked-lore:
-      - "<gray>Disponible en: <aqua>%time%</aqua></gray>"
+    today-available: "<green>%day% (%date%) - Disponible</green>"
+    today-claimed: "<gold>%day% (%date%) - Reclamada</gold>"
+    past-claimed: "<gray>%day% (%date%) - Reclamada</gray>"
+    past-missed: "<dark_gray>%day% (%date%) - Expirada</dark_gray>"
+    future-locked: "<yellow>%day% (%date%) - Bloqueada</yellow>"
+    back-item: "<gold>Volver al menu principal</gold>"
+    back-lore:
+      - "<gray>Regresar a Supplies.</gray>"
 
   bank:
-    rank-item: "<gold>Rango Actual</gold>"
-    rank-lore:
-      - "<gray>Rango: %rank%</gray>"
-      - "<gray>Cheque semanal: <gold>$%amount%</gold></gray>"
-    cheque-available: "<green>Cheque Disponible</green>"
-    cheque-available-lore:
-      - "<gray>Monto: <gold>$%amount%</gold></gray>"
+    day-locked: "<yellow>Dia %day% de %month%</yellow>"
+    day-locked-lore:
+      - "<gray>Esta recompensa aun no se desbloquea.</gray>"
+    day-claimed: "<gray>Dia %day% de %month% - Reclamado</gray>"
+    day-claimed-lore:
+      - "<gray>Monto: <gold>€%amount%</gold></gray>"
+      - "<gray>Ya fue reclamado.</gray>"
+    day-available: "<green>Dia %day% de %month% - Disponible</green>"
+    day-available-lore:
+      - "<gray>Monto: <gold>€%amount%</gold></gray>"
+      - "<green>Clic para reclamar.</green>"
+    info-item: "<gold>Info de Banca Mensual</gold>"
+    info-lore:
+      - "<gray>Tag de rango: %bestsupplies_rank_tag%</gray>"
+      - "<gray>Pagina: %page%/%total%</gray>"
+      - "<gray>Dias del mes: %days%</gray>"
       - ""
-      - "<green>Clic para reclamar</green>"
-    cheque-claimed: "<yellow>Cheque Reclamado</yellow>"
-    cheque-claimed-lore:
-      - "<gray>Ya cobraste esta semana.</gray>"
-      - "<gray>Reinicia en: <aqua>%time%</aqua></gray>"
-    countdown-item: "<gray>Proximo Reinicio</gray>"
-    countdown-lore:
-      - "<gray>Tiempo restante:</gray>"
-      - "<aqua>%time%</aqua>"
+      - "<yellow>Reclama rapido las recompensas del mes.</yellow>"
+      - "<yellow>Al iniciar otro mes, las del mes anterior se pierden.</yellow>"
+    back-item: "<gold>Volver al menu principal</gold>"
+    back-lore:
+      - "<gray>Regresar a Supplies.</gray>"
 
   food:
-    info-item: "<gold>Informacion</gold>"
+    ration-ready: "<green>%ration%</green>"
+    ration-cooldown: "<yellow>%ration%</yellow>"
+    ration-claimed: "<gray>%ration%</gray>"
+    ration-locked: "<red>%ration%</red>"
+    info-item: "<gold>Info de Raciones</gold>"
     info-lore:
-      - "<gray>Los packs se recargan por cooldown.</gray>"
-      - "<gray>Rango alto = recarga mas rapida.</gray>"
-    pack-available: "<green>%pack% - DISPONIBLE</green>"
-    pack-available-lore:
-      - "<green>Listo para reclamar</green>"
+      - "<gray>Tag de rango: %bestsupplies_rank_tag%</gray>"
+      - "<gray>Pagina: %page%/%total%</gray>"
       - ""
-    pack-cooldown: "<red>%pack% - EN ESPERA</red>"
-    pack-cooldown-lore:
-      - "<gray>Disponible en: <yellow>%time%</yellow></gray>"
-    pack-locked: "<gray>Pack no disponible</gray>"
-    pack-locked-lore:
-      - "<gray>Tu rango no incluye este pack.</gray>"
+      - "<gray>Las raciones premium se desbloquean por rango de pago.</gray>"
+    back-item: "<gold>Volver al menu principal</gold>"
+    back-lore:
+      - "<gray>Regresar a Supplies.</gray>"
 
   pending:
-    empty-item: "<gray>Sin entregas pendientes</gray>"
-    item-entry: "<yellow>Entrega #%id%</yellow>"
+    item-entry: "<gold>Entrega pendiente #%id%</gold>"
     withdraw-lore:
-      - "<gray>Clic: retirar esta entrega</gray>"
-      - "<gray>Shift+clic: retirar todo</gray>"
-    page-item: "<gold>Pagina %page%/%total%</gold>"
-    page-lore:
-      - "<gray>Navega entre tus entregas.</gray>"
-    withdraw-all-item: "<green>Retirar Todo</green>"
-    withdraw-all-lore:
-      - "<gray>Intenta retirar todas las</gray>"
-      - "<gray>entregas posibles.</gray>"
-    prev-page-item: "<yellow>Pagina Anterior</yellow>"
-    next-page-item: "<yellow>Pagina Siguiente</yellow>"
+      - "<gray>Clic para retirar esta entrega.</gray>"
+    info-item: "<gold>Info de Pendientes</gold>"
+    info-lore:
+      - "<gray>Tag de rango: %bestsupplies_rank_tag%</gray>"
+      - "<gray>Pagina: %page%/%total%</gray>"
+      - "<gray>Total pendientes: %count%</gray>"
+    back-item: "<gold>Volver al menu principal</gold>"
+    back-lore:
+      - "<gray>Regresar a Supplies.</gray>"
 
-  status:
-    player-item: "<gold>Tu Estado</gold>"
-    daily-ready-item: "<green>Diaria Disponible</green>"
-    daily-ready-lore:
-      - "<gray>Tu recompensa de hoy esta lista.</gray>"
-    daily-claimed-item: "<yellow>Diaria Reclamada</yellow>"
-    daily-claimed-lore:
-      - "<gray>Ya cobraste hoy.</gray>"
-    daily-locked-item: "<gray>Diaria No Disponible</gray>"
-    daily-locked-lore:
-      - "<gray>Solo se puede cobrar el dia actual.</gray>"
-    bank-ready-item: "<green>Cheque Disponible</green>"
-    bank-ready-lore:
-      - "<gray>Monto actual: <gold>$%amount%</gold></gray>"
-    bank-claimed-item: "<yellow>Cheque Reclamado</yellow>"
-    bank-claimed-lore:
-      - "<gray>Reinicia en: <aqua>%time%</aqua></gray>"
-    food-default-item: "<gray>Raciones</gray>"
-    food-ready-item: "<green>Raciones: %count% disponibles</green>"
-    food-cooldown-item: "<red>Raciones en cooldown</red>"
-    pending-has-item: "<gold>Pendientes: %count%</gold>"
-    pending-empty-item: "<gray>Pendientes: 0</gray>"
+  common:
+    prev-page-item: "<gold>Pagina anterior</gold>"
+    prev-page-lore:
+      - "<gray>Volver a la pagina anterior.</gray>"
+    no-prev-item: "<gray>No hay pagina anterior</gray>"
+    no-prev-lore:
+      - "<gray>No hay mas paginas para retroceder.</gray>"
+    next-page-item: "<gold>Pagina siguiente</gold>"
+    next-page-lore:
+      - "<gray>Avanzar a la siguiente pagina.</gray>"
+    no-next-item: "<gray>No hay pagina siguiente</gray>"
+    no-next-lore:
+      - "<gray>No hay mas paginas para avanzar.</gray>"
 
   back-item: "<gray>Volver</gray>"
   close-item: "<red>Cerrar</red>"
 
 admin:
   reset-daily: "<green>Diaria reiniciada para %player%.</green>"
-  reset-weekly: "<green>Cheque semanal reiniciado para %player%.</green>"
-  reset-food: "<green>Cooldowns de comida reiniciados para %player%.</green>"
-  give-cheque: "<green>Cheque de $%amount% entregado a %player%.</green>"
+  reset-bank: "<green>Banca mensual reiniciada para %player% en dia %day%.</green>"
+  reset-food: "<green>Cooldowns de raciones reiniciados para %player%.</green>"
+  give-cheque: "<green>Cheque legacy de €%amount% entregado a %player%.</green>"
   debug-header: "<gold>=== Debug de %player% ===</gold>"
   debug-streak: "<gray>Racha: %streak%</gray>"
   debug-last-daily: "<gray>Ultima diaria: %date%</gray>"
-  debug-week-key: "<gray>Periodo semanal: %week%</gray>"
-  debug-rank: "<gray>Rango: %rank%</gray>"
+  debug-rank-id: "<gray>Rank ID interno: %rank_id%</gray>"
+  debug-tag: "<gray>Tag: %tag%</gray>"

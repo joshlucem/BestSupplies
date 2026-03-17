@@ -4,6 +4,7 @@ import dev.joshlucem.nullithstudios.bestsupplies.BestSupplies;
 import dev.joshlucem.nullithstudios.bestsupplies.model.DailyRewardDefinition;
 import dev.joshlucem.nullithstudios.bestsupplies.model.FoodPackDefinition;
 import dev.joshlucem.nullithstudios.bestsupplies.model.RankDefinition;
+import dev.joshlucem.nullithstudios.bestsupplies.model.RationDefinition;
 import dev.joshlucem.nullithstudios.bestsupplies.model.StreakMilestone;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -11,23 +12,28 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.DayOfWeek;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ConfigManager {
 
     private final BestSupplies plugin;
-    
+
     private FileConfiguration config;
     private FileConfiguration dailyConfig;
     private FileConfiguration ranksConfig;
     private FileConfiguration messagesConfig;
-    
+    private FileConfiguration tagsConfig;
+
     private ZoneId timezone;
     private DayOfWeek weeklyResetDay;
     private int weeklyResetHour;
@@ -37,16 +43,20 @@ public class ConfigManager {
     private boolean debugEnabled;
     private boolean placeholderApiEnabled;
     private boolean itemsAdderEnabled;
-    
+
     private Map<DayOfWeek, DailyRewardDefinition> dailyRewards;
     private Map<Integer, StreakMilestone> streakMilestones;
     private List<String> rankPriority;
     private Map<String, RankDefinition> ranks;
+    private List<RationDefinition> rations;
+    private Map<String, String> rankTags;
     private Map<String, String> itemTranslations;
 
     public ConfigManager(BestSupplies plugin) {
         this.plugin = plugin;
         this.itemTranslations = new HashMap<>();
+        this.rankTags = new HashMap<>();
+        this.rations = new ArrayList<>();
     }
 
     public void loadAll() {
@@ -54,6 +64,7 @@ public class ConfigManager {
         loadDailyConfig();
         loadRanksConfig();
         loadMessagesConfig();
+        loadTagsConfig();
         loadItemTranslations();
     }
 
@@ -61,15 +72,15 @@ public class ConfigManager {
         plugin.saveDefaultConfig();
         plugin.reloadConfig();
         config = plugin.getConfig();
-        
+
         String tz = config.getString("timezone", "America/Lima");
         try {
             timezone = ZoneId.of(tz);
         } catch (Exception e) {
-            plugin.getLogger().warning("Zona horaria inválida: " + tz + ". Usando America/Lima");
+            plugin.getLogger().warning("Zona horaria invalida: " + tz + ". Usando America/Lima");
             timezone = ZoneId.of("America/Lima");
         }
-        
+
         String resetDayStr = config.getString("weekly-reset.day", "MONDAY");
         try {
             weeklyResetDay = DayOfWeek.valueOf(resetDayStr.toUpperCase());
@@ -78,12 +89,12 @@ public class ConfigManager {
         }
         weeklyResetHour = config.getInt("weekly-reset.hour", 0);
         weeklyResetMinute = config.getInt("weekly-reset.minute", 0);
-        
+
         guiUpdateInterval = config.getInt("gui-update-interval", 20);
-        useChequeItem = config.getBoolean("use-cheque-item", true);
+        useChequeItem = config.getBoolean("use-cheque-item", false);
         debugEnabled = config.getBoolean("debug", false);
         placeholderApiEnabled = config.getBoolean("enable-placeholderapi", true);
-        itemsAdderEnabled = config.getBoolean("enable-itemsadder-icons", false);
+        itemsAdderEnabled = config.getBoolean("enable-itemsadder-icons", true);
     }
 
     private void loadDailyConfig() {
@@ -92,15 +103,14 @@ public class ConfigManager {
             plugin.saveResource("daily.yml", false);
         }
         dailyConfig = YamlConfiguration.loadConfiguration(file);
-        
-        // Load default values
+
         InputStream defStream = plugin.getResource("daily.yml");
         if (defStream != null) {
             YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(
                     new InputStreamReader(defStream, StandardCharsets.UTF_8));
             dailyConfig.setDefaults(defConfig);
         }
-        
+
         dailyRewards = new HashMap<>();
         ConfigurationSection rewardsSection = dailyConfig.getConfigurationSection("rewards");
         if (rewardsSection != null) {
@@ -113,11 +123,11 @@ public class ConfigManager {
                         dailyRewards.put(day, reward);
                     }
                 } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Día inválido en daily.yml: " + dayKey);
+                    plugin.getLogger().warning("Dia invalido en daily.yml: " + dayKey);
                 }
             }
         }
-        
+
         streakMilestones = new HashMap<>();
         ConfigurationSection milestonesSection = dailyConfig.getConfigurationSection("streak-milestones");
         if (milestonesSection != null) {
@@ -135,9 +145,54 @@ public class ConfigManager {
                         streakMilestones.put(streak, milestone);
                     }
                 } catch (NumberFormatException e) {
-                    plugin.getLogger().warning("Milestone inválido en daily.yml: " + milestoneKey);
+                    plugin.getLogger().warning("Milestone invalido en daily.yml: " + milestoneKey);
                 }
             }
+        }
+
+        rations = new ArrayList<>();
+        ConfigurationSection rationsSection = dailyConfig.getConfigurationSection("rations");
+        if (rationsSection != null) {
+            int autoOrder = 0;
+            for (String rationId : rationsSection.getKeys(false)) {
+                ConfigurationSection section = rationsSection.getConfigurationSection(rationId);
+                if (section == null) {
+                    continue;
+                }
+
+                int order = section.getInt("order", autoOrder++);
+                String icon = section.getString("icon", "CHEST");
+                String displayName = section.getString("display-name", rationId);
+                List<String> description = section.getStringList("description");
+                boolean oneTime = section.getBoolean("one-time", false);
+                long cooldown = parseDuration(section.getString("cooldown", oneTime ? "0s" : "24h"));
+                String requiredMinRank = section.getString("required-min-rank", "").trim();
+                if (requiredMinRank.isEmpty()) {
+                    requiredMinRank = null;
+                }
+
+                RewardBundle fixedRewards = parseRewardBundle(section, "rewards");
+                RewardBundle randomRewards = parseRewardBundle(section, "random-rewards");
+                int randomPicks = section.getInt("random-picks", randomRewards.defaultRewards().isEmpty() ? 0 : 1);
+
+                RationDefinition ration = new RationDefinition(
+                        rationId,
+                        order,
+                        icon,
+                        displayName,
+                        description,
+                        oneTime,
+                        cooldown,
+                        requiredMinRank,
+                        fixedRewards.defaultRewards(),
+                        fixedRewards.byRank(),
+                        randomRewards.defaultRewards(),
+                        randomRewards.byRank(),
+                        randomPicks
+                );
+                rations.add(ration);
+            }
+            rations.sort(Comparator.comparingInt(RationDefinition::getOrder));
         }
     }
 
@@ -149,14 +204,40 @@ public class ConfigManager {
         } catch (Exception e) {
             icon = Material.CHEST;
         }
-        
+
         double money = section.getDouble("money", 0);
         List<String> items = section.getStringList("items");
         List<String> commands = section.getStringList("commands");
         String displayName = section.getString("display-name", "Recompensa");
         List<String> description = section.getStringList("description");
-        
+
         return new DailyRewardDefinition(icon, money, items, commands, displayName, description);
+    }
+
+    private RewardBundle parseRewardBundle(ConfigurationSection parent, String path) {
+        if (parent.isList(path)) {
+            return new RewardBundle(parent.getStringList(path), Map.of());
+        }
+
+        ConfigurationSection section = parent.getConfigurationSection(path);
+        if (section == null) {
+            return new RewardBundle(List.of(), Map.of());
+        }
+
+        List<String> defaults = section.getStringList("default");
+        Map<String, List<String>> byRank = new HashMap<>();
+
+        for (String key : section.getKeys(false)) {
+            if ("default".equalsIgnoreCase(key)) {
+                continue;
+            }
+            byRank.put(key.toLowerCase(), section.getStringList(key));
+        }
+
+        return new RewardBundle(defaults, byRank);
+    }
+
+    private record RewardBundle(List<String> defaultRewards, Map<String, List<String>> byRank) {
     }
 
     private void loadRanksConfig() {
@@ -165,48 +246,67 @@ public class ConfigManager {
             plugin.saveResource("ranks.yml", false);
         }
         ranksConfig = YamlConfiguration.loadConfiguration(file);
-        
+
         InputStream defStream = plugin.getResource("ranks.yml");
         if (defStream != null) {
             YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(
                     new InputStreamReader(defStream, StandardCharsets.UTF_8));
             ranksConfig.setDefaults(defConfig);
         }
-        
-        rankPriority = ranksConfig.getStringList("priority");
-        
+
+        rankPriority = ranksConfig.getStringList("priority").stream().map(String::toLowerCase).toList();
+
         ranks = new HashMap<>();
         ConfigurationSection ranksSection = ranksConfig.getConfigurationSection("ranks");
         if (ranksSection != null) {
             for (String rankId : ranksSection.getKeys(false)) {
                 ConfigurationSection rankSection = ranksSection.getConfigurationSection(rankId);
                 if (rankSection != null) {
-                    RankDefinition rank = parseRank(rankId, rankSection);
-                    ranks.put(rankId, rank);
+                    RankDefinition rank = parseRank(rankId.toLowerCase(), rankSection);
+                    ranks.put(rankId.toLowerCase(), rank);
                 }
             }
         }
     }
 
     private RankDefinition parseRank(String id, ConfigurationSection section) {
-        // Support both single permission and multiple permissions
         List<String> permissions = new ArrayList<>();
-        
-        // Check for 'permissions' list first
+
         if (section.contains("permissions")) {
             permissions.addAll(section.getStringList("permissions"));
         }
-        // Fallback to single 'permission' string
+
         String singlePermission = section.getString("permission", "");
         if (!singlePermission.isEmpty() && !permissions.contains(singlePermission)) {
             permissions.add(singlePermission);
         }
-        
+
         String displayName = section.getString("display-name", id);
+        String category = section.getString("category", "user");
+
         double weeklyMoney = section.getDouble("weekly-money", 0);
         String foodCooldownStr = section.getString("food-cooldown", "24h");
         long foodCooldownMs = parseDuration(foodCooldownStr);
-        
+
+        ConfigurationSection monthlySection = section.getConfigurationSection("monthly-bank");
+        double monthlyBase = 0;
+        double monthlyStep = 0;
+        Map<Integer, Double> monthlyOverrides = new LinkedHashMap<>();
+        if (monthlySection != null) {
+            monthlyBase = monthlySection.getDouble("base", 0);
+            monthlyStep = monthlySection.getDouble("step", 0);
+            ConfigurationSection overrides = monthlySection.getConfigurationSection("overrides");
+            if (overrides != null) {
+                for (String key : overrides.getKeys(false)) {
+                    try {
+                        int day = Integer.parseInt(key);
+                        monthlyOverrides.put(day, overrides.getDouble(key));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
+        }
+
         Map<String, FoodPackDefinition> packs = new HashMap<>();
         ConfigurationSection packsSection = section.getConfigurationSection("packs");
         if (packsSection != null) {
@@ -218,8 +318,19 @@ public class ConfigManager {
                 }
             }
         }
-        
-        return new RankDefinition(id, permissions, displayName, weeklyMoney, foodCooldownMs, packs);
+
+        return new RankDefinition(
+                id,
+                permissions,
+                displayName,
+                weeklyMoney,
+                foodCooldownMs,
+                packs,
+                category,
+                monthlyBase,
+                monthlyStep,
+                monthlyOverrides
+        );
     }
 
     private FoodPackDefinition parseFoodPack(String id, ConfigurationSection section) {
@@ -232,59 +343,61 @@ public class ConfigManager {
             icon = Material.BREAD;
         }
         List<String> items = section.getStringList("items");
-        
+
         return new FoodPackDefinition(id, displayName, icon, items);
     }
 
-    private long parseDuration(String duration) {
-        // Parse duration like "24h", "18h", "12h30m"
+    public long parseDuration(String duration) {
+        if (duration == null || duration.isBlank()) {
+            return 24L * 60L * 60L * 1000L;
+        }
+
         long totalMs = 0;
         String remaining = duration.toLowerCase().trim();
-        
-        // Days
+
         int dIdx = remaining.indexOf('d');
         if (dIdx > 0) {
             try {
                 int days = Integer.parseInt(remaining.substring(0, dIdx));
                 totalMs += days * 24L * 60L * 60L * 1000L;
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
             remaining = remaining.substring(dIdx + 1);
         }
-        
-        // Hours
+
         int hIdx = remaining.indexOf('h');
         if (hIdx > 0) {
             try {
                 int hours = Integer.parseInt(remaining.substring(0, hIdx));
                 totalMs += hours * 60L * 60L * 1000L;
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
             remaining = remaining.substring(hIdx + 1);
         }
-        
-        // Minutes
+
         int mIdx = remaining.indexOf('m');
         if (mIdx > 0) {
             try {
                 int minutes = Integer.parseInt(remaining.substring(0, mIdx));
                 totalMs += minutes * 60L * 1000L;
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
             remaining = remaining.substring(mIdx + 1);
         }
-        
-        // Seconds
+
         int sIdx = remaining.indexOf('s');
         if (sIdx > 0) {
             try {
                 int seconds = Integer.parseInt(remaining.substring(0, sIdx));
                 totalMs += seconds * 1000L;
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
         }
-        
-        // Default to 24 hours if parsing fails
+
         if (totalMs == 0) {
             totalMs = 24L * 60L * 60L * 1000L;
         }
-        
+
         return totalMs;
     }
 
@@ -294,12 +407,40 @@ public class ConfigManager {
             plugin.saveResource("messages.yml", false);
         }
         messagesConfig = YamlConfiguration.loadConfiguration(file);
-        
+
         InputStream defStream = plugin.getResource("messages.yml");
         if (defStream != null) {
             YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(
                     new InputStreamReader(defStream, StandardCharsets.UTF_8));
             messagesConfig.setDefaults(defConfig);
+        }
+    }
+
+    private void loadTagsConfig() {
+        File file = new File(plugin.getDataFolder(), "tags.yml");
+        if (!file.exists()) {
+            plugin.saveResource("tags.yml", false);
+        }
+        tagsConfig = YamlConfiguration.loadConfiguration(file);
+
+        InputStream defStream = plugin.getResource("tags.yml");
+        if (defStream != null) {
+            YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(
+                    new InputStreamReader(defStream, StandardCharsets.UTF_8));
+            tagsConfig.setDefaults(defConfig);
+        }
+
+        rankTags = new HashMap<>();
+        ConfigurationSection tagsSection = tagsConfig.getConfigurationSection("Tags");
+        if (tagsSection == null) {
+            tagsSection = tagsConfig.getConfigurationSection("tags");
+        }
+
+        if (tagsSection != null) {
+            for (String rankId : tagsSection.getKeys(false)) {
+                String tag = tagsSection.getString(rankId + ".tag", "");
+                rankTags.put(rankId.toLowerCase(), tag);
+            }
         }
     }
 
@@ -309,7 +450,7 @@ public class ConfigManager {
             plugin.saveResource("messages-items.yml", false);
         }
         FileConfiguration itemsConfig = YamlConfiguration.loadConfiguration(file);
-        
+
         itemTranslations = new HashMap<>();
         ConfigurationSection itemsSection = itemsConfig.getConfigurationSection("items");
         if (itemsSection != null) {
@@ -323,25 +464,21 @@ public class ConfigManager {
         plugin.debug("Cargadas " + itemTranslations.size() + " traducciones de items");
     }
 
-    /**
-     * Get translated item name for a material
-     * Returns the material name formatted if no translation exists
-     */
     public String getItemName(String materialName) {
-        if (materialName == null) return "";
+        if (materialName == null) {
+            return "";
+        }
         String upper = materialName.toUpperCase();
         if (itemTranslations.containsKey(upper)) {
             return itemTranslations.get(upper);
         }
-        // Fallback: format material name (COOKED_BEEF -> Cooked Beef)
         return formatMaterialName(upper);
     }
 
-    /**
-     * Get translated item name for a Material
-     */
     public String getItemName(Material material) {
-        if (material == null) return "";
+        if (material == null) {
+            return "";
+        }
         return getItemName(material.name());
     }
 
@@ -351,8 +488,8 @@ public class ConfigManager {
         for (String part : parts) {
             if (!part.isEmpty()) {
                 sb.append(Character.toUpperCase(part.charAt(0)))
-                  .append(part.substring(1))
-                  .append(" ");
+                        .append(part.substring(1))
+                        .append(" ");
             }
         }
         return sb.toString().trim();
@@ -378,7 +515,6 @@ public class ConfigManager {
         return getMessage("prefix");
     }
 
-    // Config getters
     public ZoneId getTimezone() {
         return timezone;
     }
@@ -451,6 +587,10 @@ public class ConfigManager {
         return config.getInt("gui-slots." + guiName + "." + slotName, -1);
     }
 
+    public String getItemsAdderIcon(String key, String fallback) {
+        return config.getString("itemsadder-icons." + key, fallback);
+    }
+
     public Material getDecorationFiller() {
         String mat = config.getString("decoration.filler", "WHITE_STAINED_GLASS_PANE");
         try {
@@ -469,7 +609,6 @@ public class ConfigManager {
         }
     }
 
-    // Daily rewards getters
     public Map<DayOfWeek, DailyRewardDefinition> getDailyRewards() {
         return dailyRewards;
     }
@@ -486,7 +625,6 @@ public class ConfigManager {
         return streakMilestones.get(streak);
     }
 
-    // Ranks getters
     public List<String> getRankPriority() {
         return rankPriority;
     }
@@ -496,7 +634,30 @@ public class ConfigManager {
     }
 
     public RankDefinition getRank(String rankId) {
-        return ranks.get(rankId);
+        return ranks.get(rankId != null ? rankId.toLowerCase() : "default");
+    }
+
+    public List<RationDefinition> getRations() {
+        return rations;
+    }
+
+    public RationDefinition getRation(String rationId) {
+        if (rationId == null) {
+            return null;
+        }
+        for (RationDefinition ration : rations) {
+            if (ration.getId().equalsIgnoreCase(rationId)) {
+                return ration;
+            }
+        }
+        return null;
+    }
+
+    public String getRankTag(String rankId) {
+        if (rankId == null) {
+            return rankTags.getOrDefault("default", "");
+        }
+        return rankTags.getOrDefault(rankId.toLowerCase(), rankTags.getOrDefault("default", ""));
     }
 
     public FileConfiguration getConfig() {
@@ -513,5 +674,9 @@ public class ConfigManager {
 
     public FileConfiguration getMessagesConfig() {
         return messagesConfig;
+    }
+
+    public FileConfiguration getTagsConfig() {
+        return tagsConfig;
     }
 }

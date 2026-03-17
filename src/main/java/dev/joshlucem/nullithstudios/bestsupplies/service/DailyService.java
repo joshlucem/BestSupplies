@@ -28,85 +28,73 @@ public class DailyService {
         this.rewardService = rewardService;
     }
 
-    /**
-     * Get the player's current state
-     */
     public PlayerState getPlayerState(Player player) {
         return database.getPlayerState(player.getUniqueId().toString());
     }
 
-    /**
-     * Save the player's state
-     */
     public void savePlayerState(PlayerState state) {
         database.savePlayerState(state);
     }
 
-    /**
-     * Get the player's current streak
-     */
     public int getStreak(Player player) {
         return getPlayerState(player).getStreak();
     }
 
-    /**
-     * Check if player has claimed today's reward
-     */
     public boolean hasClaimedToday(Player player) {
-        String today = timeService.getTodayKey();
-        return database.hasDailyClaim(player.getUniqueId().toString(), today);
+        return hasClaimedOnDate(player, timeService.getCurrentDate());
     }
 
-    /**
-     * Check if a specific day's reward is available
-     * Only today's reward can be claimed
-     */
-    public DailyStatus getDayStatus(Player player, DayOfWeek day) {
-        DayOfWeek today = timeService.getCurrentDayOfWeek();
-        
-        if (day == today) {
-            // Today
-            if (hasClaimedToday(player)) {
-                return DailyStatus.CLAIMED;
-            }
-            return DailyStatus.AVAILABLE;
-        } else if (day.getValue() < today.getValue()) {
-            // Past day this week
-            return DailyStatus.EXPIRED;
-        } else {
-            // Future day
-            return DailyStatus.LOCKED;
+    public boolean hasClaimedOnDate(Player player, LocalDate date) {
+        String dateKey = timeService.getDateKey(date);
+        return database.hasDailyClaim(player.getUniqueId().toString(), dateKey);
+    }
+
+    public DailyDateStatus getDateStatus(Player player, LocalDate date) {
+        LocalDate today = timeService.getCurrentDate();
+
+        if (date.isAfter(today)) {
+            return DailyDateStatus.FUTURE_LOCKED;
         }
+
+        boolean claimed = hasClaimedOnDate(player, date);
+        if (date.isEqual(today)) {
+            return claimed ? DailyDateStatus.TODAY_CLAIMED : DailyDateStatus.TODAY_AVAILABLE;
+        }
+
+        return claimed ? DailyDateStatus.PAST_CLAIMED : DailyDateStatus.PAST_MISSED;
     }
 
-    /**
-     * Check and update streak based on last claim date
-     * Called when player joins or opens daily GUI
-     */
+    public DailyStatus getDayStatus(Player player, DayOfWeek day) {
+        LocalDate date = timeService.getDateForDayOfWeek(day);
+        DailyDateStatus status = getDateStatus(player, date);
+
+        return switch (status) {
+            case TODAY_AVAILABLE -> DailyStatus.AVAILABLE;
+            case TODAY_CLAIMED -> DailyStatus.CLAIMED;
+            case PAST_CLAIMED, PAST_MISSED -> DailyStatus.EXPIRED;
+            case FUTURE_LOCKED -> DailyStatus.LOCKED;
+        };
+    }
+
     public void checkAndUpdateStreak(Player player) {
         PlayerState state = getPlayerState(player);
         String todayKey = timeService.getTodayKey();
         String lastDailyDate = state.getLastDailyDate();
 
-        // If never claimed, streak stays at 0
         if (lastDailyDate == null) {
             return;
         }
 
-        // If last claim was today, streak is already current
         if (lastDailyDate.equals(todayKey)) {
             return;
         }
 
-        // If last claim was yesterday, streak continues
         if (timeService.wasYesterday(lastDailyDate)) {
-            // Streak continues when they claim today
             return;
         }
 
-        // More than one day has passed, reset streak
         if (state.getStreak() > 0) {
-            plugin.debug("Racha perdida para " + player.getName() + ": más de un día sin reclamar");
+            plugin.debug("Racha perdida para " + player.getName() + ": mas de un dia sin reclamar");
             state.resetStreak();
             state.setLastSeenDate(todayKey);
             savePlayerState(state);
@@ -114,53 +102,36 @@ public class DailyService {
         }
     }
 
-    /**
-     * Claim today's daily reward
-     */
     public ClaimResult claimDaily(Player player) {
         DayOfWeek today = timeService.getCurrentDayOfWeek();
-        
-        // Check if already claimed
+
         if (hasClaimedToday(player)) {
             return ClaimResult.ALREADY_CLAIMED;
         }
 
-        // Get reward for today
         DailyRewardDefinition reward = configManager.getDailyReward(today);
         if (reward == null) {
             plugin.getLogger().warning("No hay recompensa configurada para " + today);
             return ClaimResult.NO_REWARD;
         }
 
-        // Get and update player state
         PlayerState state = getPlayerState(player);
         String todayKey = timeService.getTodayKey();
         String lastDailyDate = state.getLastDailyDate();
 
-        // Check if streak continues
-        boolean streakContinues = lastDailyDate != null && 
-                (lastDailyDate.equals(todayKey) || timeService.wasYesterday(lastDailyDate));
+        boolean streakContinues = lastDailyDate != null && timeService.wasYesterday(lastDailyDate);
 
-        if (streakContinues || lastDailyDate != null && lastDailyDate.equals(todayKey)) {
-            // Claiming same day (shouldn't happen) or continuing streak
+        if (streakContinues) {
             state.incrementStreak();
-        } else if (lastDailyDate == null) {
-            // First ever claim
-            state.setStreak(1);
         } else {
-            // Streak broken, start new
             state.setStreak(1);
         }
 
-        // Update state
         state.setLastDailyDate(todayKey);
         state.setLastSeenDate(todayKey);
         savePlayerState(state);
 
-        // Mark as claimed in DB
         database.setDailyClaim(player.getUniqueId().toString(), todayKey, true);
-
-        // Give rewards with streak bonus
         rewardService.giveDailyReward(player, reward, state.getStreak());
 
         plugin.debug("Diaria reclamada por " + player.getName() + " - Racha: " + state.getStreak());
@@ -168,18 +139,12 @@ public class DailyService {
         return ClaimResult.SUCCESS;
     }
 
-    /**
-     * Reset a player's daily claim for today (admin)
-     */
     public void resetDailyToday(Player target) {
         String today = timeService.getTodayKey();
         database.setDailyClaim(target.getUniqueId().toString(), today, false);
         plugin.debug("Diaria reseteada para " + target.getName());
     }
 
-    /**
-     * Reset a player's streak (admin)
-     */
     public void resetStreak(Player target) {
         PlayerState state = getPlayerState(target);
         state.resetStreak();
@@ -188,33 +153,29 @@ public class DailyService {
         plugin.debug("Racha reseteada para " + target.getName());
     }
 
-    /**
-     * Get the date for a day of the current week
-     */
     public LocalDate getDateForDay(DayOfWeek day) {
         return timeService.getDateForDayOfWeek(day);
     }
 
-    /**
-     * Get today's reward definition
-     */
     public DailyRewardDefinition getTodayReward() {
         return configManager.getDailyReward(timeService.getCurrentDayOfWeek());
     }
 
-    /**
-     * Possible statuses for daily rewards
-     */
-    public enum DailyStatus {
-        AVAILABLE,    // Can claim now (today and not claimed)
-        CLAIMED,      // Already claimed (today)
-        EXPIRED,      // Past day, no longer claimable
-        LOCKED        // Future day, not yet available
+    public enum DailyDateStatus {
+        TODAY_AVAILABLE,
+        TODAY_CLAIMED,
+        PAST_CLAIMED,
+        PAST_MISSED,
+        FUTURE_LOCKED
     }
 
-    /**
-     * Result of claiming a daily reward
-     */
+    public enum DailyStatus {
+        AVAILABLE,
+        CLAIMED,
+        EXPIRED,
+        LOCKED
+    }
+
     public enum ClaimResult {
         SUCCESS,
         ALREADY_CLAIMED,

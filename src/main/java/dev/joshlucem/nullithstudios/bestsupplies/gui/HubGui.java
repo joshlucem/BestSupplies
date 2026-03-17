@@ -5,152 +5,129 @@ import dev.joshlucem.nullithstudios.bestsupplies.util.ItemParser;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class HubGui extends BaseGui {
 
-    private static final int DEFAULT_OVERVIEW_SLOT = 4;
-    private static final int DEFAULT_DAILY_SLOT = 20;
-    private static final int DEFAULT_BANK_SLOT = 22;
-    private static final int DEFAULT_FOOD_SLOT = 24;
-    private static final int DEFAULT_STATUS_SLOT = 30;
-    private static final int DEFAULT_PENDING_SLOT = 32;
-    private static final int DEFAULT_CLOSE_SLOT = 49;
+    private static final int[] BLACK_SLOTS = {0, 2, 8, 18, 20, 26};
+    private static final int[] GRAY_SLOTS = {1, 3, 4, 5, 6, 7, 9, 11, 15, 17, 19, 21, 22, 23, 24, 25};
+
+    private static final int STATUS_SLOT = 10;
+    private static final int DAILY_SLOT = 12;
+    private static final int BANK_SLOT = 13;
+    private static final int FOOD_SLOT = 14;
+    private static final int PENDING_SLOT = 16;
 
     public HubGui(BestSupplies plugin, Player player) {
         super(plugin, player);
-        init(plugin.getConfigManager().getGuiTitle("hub"), 6);
+        init(plugin.getConfigManager().getGuiTitle("hub"), 3);
     }
 
     @Override
     protected void build() {
-        fillBorder(plugin.getConfigManager().getDecorationBorder());
-        fillEmpty(plugin.getConfigManager().getDecorationFiller());
+        fillEmpty(Material.WHITE_STAINED_GLASS_PANE);
+        setSlots(BLACK_SLOTS, ItemParser.createFiller(Material.BLACK_STAINED_GLASS_PANE));
+        setSlots(GRAY_SLOTS, ItemParser.createFiller(Material.GRAY_STAINED_GLASS_PANE));
 
-        buildOverview();
+        buildStatusItem();
         buildActions();
-
-        int closeSlot = getSlot("hub", "close", DEFAULT_CLOSE_SLOT);
-        setItem(closeSlot, createCloseButton(), event -> {
-            player.closeInventory();
-        });
     }
 
-    private void buildOverview() {
-        int overviewSlot = getSlot("hub", "overview", DEFAULT_OVERVIEW_SLOT);
-        String rankName = plugin.getRankService().getRankDisplayName(player);
-        int streak = plugin.getDailyService().getStreak(player);
-        int pendingCount = plugin.getPendingService().getPendingCount(player);
-        boolean weeklyClaimed = plugin.getBankService().hasClaimedWeekly(player);
+    private void buildStatusItem() {
+        boolean dailyPending = !plugin.getDailyService().hasClaimedToday(player);
+        boolean bankPending = plugin.getBankService().hasPendingMonthlyClaims(player);
+        boolean foodPending = plugin.getFoodService().hasAnyReadyRation(player);
 
-        Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("%rank%", rankName);
-        placeholders.put("%streak%", String.valueOf(streak));
-        placeholders.put("%pending%", String.valueOf(pendingCount));
-        placeholders.put("%weekly_status%", weeklyClaimed
-            ? plugin.getConfigManager().getMessage("bank.claimed")
-            : plugin.getConfigManager().getMessage("bank.available"));
+        List<String> lore = new ArrayList<>();
+        lore.add("<gray>Recompensas diarias: " + (dailyPending ? "<yellow>Pendiente</yellow>" : "<green>Reclamadas</green>") + "</gray>");
+        lore.add("<gray>Recompensas de la Banca Mensual: " + (bankPending ? "<yellow>Pendiente</yellow>" : "<green>Reclamadas</green>") + "</gray>");
+        lore.add("<gray>Recompensas de las Raciones: " + (foodPending ? "<yellow>Pendiente</yellow>" : "<green>Reclamadas</green>") + "</gray>");
 
-        ItemStack overviewItem = ItemParser.createItem(
-            Material.BOOK,
-            plugin.getConfigManager().getMessage("gui.hub.overview-item"),
-            getMessageList("gui.hub.overview-lore", placeholders),
-            null
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD, 1);
+        if (head.getItemMeta() instanceof SkullMeta skullMeta) {
+            skullMeta.setOwningPlayer(player);
+            head.setItemMeta(skullMeta);
+        }
+
+        ItemStack item = ItemParser.createItem(
+                head,
+                "<gold><bold>Estado Personal</bold></gold>",
+                lore
         );
-        setItem(overviewSlot, overviewItem);
+
+        setItem(STATUS_SLOT, item);
     }
 
     private void buildActions() {
-        int dailySlot = getSlot("hub", "daily", DEFAULT_DAILY_SLOT);
         setItem(
-            dailySlot,
-            ItemParser.createItem(
-                Material.CHEST,
-                plugin.getConfigManager().getMessage("gui.hub.daily-item"),
-                plugin.getConfigManager().getMessageList("gui.hub.daily-lore")
-            ),
-            event -> {
-                if (!player.hasPermission("bestsupplies.daily")) {
-                    sendNoPermission();
-                    return;
+                DAILY_SLOT,
+                createIconItem(
+                        plugin.getConfigManager().getItemsAdderIcon("daily-menu", "nullith:diamond"),
+                        Material.DIAMOND,
+                        plugin.getConfigManager().getMessage("gui.hub.daily-item"),
+                        plugin.getConfigManager().getMessageList("gui.hub.daily-lore")
+                ),
+                event -> {
+                    if (!player.hasPermission("bestsupplies.daily")) {
+                        sendNoPermission();
+                        return;
+                    }
+                    plugin.getGuiManager().openDaily(player);
                 }
-                plugin.getGuiManager().openDaily(player);
-            }
         );
 
-        int bankSlot = getSlot("hub", "bank", DEFAULT_BANK_SLOT);
         setItem(
-            bankSlot,
-            ItemParser.createItem(
-                Material.GOLD_INGOT,
-                plugin.getConfigManager().getMessage("gui.hub.bank-item"),
-                plugin.getConfigManager().getMessageList("gui.hub.bank-lore")
-            ),
-            event -> {
-                if (!player.hasPermission("bestsupplies.bank")) {
-                    sendNoPermission();
-                    return;
+                BANK_SLOT,
+                createIconItem(
+                        plugin.getConfigManager().getItemsAdderIcon("monthly-bank-menu", "nullith:money_token"),
+                        Material.PAPER,
+                        plugin.getConfigManager().getMessage("gui.hub.bank-item"),
+                        plugin.getConfigManager().getMessageList("gui.hub.bank-lore")
+                ),
+                event -> {
+                    if (!player.hasPermission("bestsupplies.bank")) {
+                        sendNoPermission();
+                        return;
+                    }
+                    plugin.getGuiManager().openBank(player);
                 }
-                plugin.getGuiManager().openBank(player);
-            }
         );
 
-        int foodSlot = getSlot("hub", "food", DEFAULT_FOOD_SLOT);
         setItem(
-            foodSlot,
-            ItemParser.createItem(
-                Material.COOKED_BEEF,
-                plugin.getConfigManager().getMessage("gui.hub.food-item"),
-                plugin.getConfigManager().getMessageList("gui.hub.food-lore")
-            ),
-            event -> {
-                if (!player.hasPermission("bestsupplies.food")) {
-                    sendNoPermission();
-                    return;
+                FOOD_SLOT,
+                ItemParser.createItem(
+                        Material.BAKED_POTATO,
+                        plugin.getConfigManager().getMessage("gui.hub.food-item"),
+                        plugin.getConfigManager().getMessageList("gui.hub.food-lore")
+                ),
+                event -> {
+                    if (!player.hasPermission("bestsupplies.food")) {
+                        sendNoPermission();
+                        return;
+                    }
+                    plugin.getGuiManager().openFood(player);
                 }
-                plugin.getGuiManager().openFood(player);
-            }
         );
 
-        int statusSlot = getSlot("hub", "status", DEFAULT_STATUS_SLOT);
+        int pendingCount = plugin.getPendingService().getPendingCount(player);
         setItem(
-            statusSlot,
-            ItemParser.createItem(
-                Material.PLAYER_HEAD,
-                plugin.getConfigManager().getMessage("gui.hub.status-item"),
-                plugin.getConfigManager().getMessageList("gui.hub.status-lore")
-            ),
-            event -> {
-                if (!player.hasPermission("bestsupplies.status")) {
-                    sendNoPermission();
-                    return;
+                PENDING_SLOT,
+                ItemParser.createItem(
+                        Material.SHULKER_BOX,
+                        plugin.getConfigManager().getMessage("gui.hub.pending-item"),
+                        getMessageList("gui.hub.pending-lore", java.util.Map.of("%count%", String.valueOf(pendingCount))),
+                        null
+                ),
+                event -> {
+                    if (!player.hasPermission("bestsupplies.pending")) {
+                        sendNoPermission();
+                        return;
+                    }
+                    plugin.getGuiManager().openPending(player);
                 }
-                plugin.getGuiManager().openStatus(player);
-            }
-        );
-
-        int pendingSlot = getSlot("hub", "pending", DEFAULT_PENDING_SLOT);
-        Map<String, String> placeholders = Map.of(
-            "%count%", String.valueOf(plugin.getPendingService().getPendingCount(player))
-        );
-        setItem(
-            pendingSlot,
-            ItemParser.createItem(
-                Material.CHEST_MINECART,
-                plugin.getConfigManager().getMessage("gui.hub.pending-item"),
-                getMessageList("gui.hub.pending-lore", placeholders),
-                null
-            ),
-            event -> {
-                if (!player.hasPermission("bestsupplies.pending")) {
-                    sendNoPermission();
-                    return;
-                }
-                plugin.getGuiManager().openPending(player);
-            }
         );
     }
 }

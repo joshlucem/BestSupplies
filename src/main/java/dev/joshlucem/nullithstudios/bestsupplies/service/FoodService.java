@@ -2,17 +2,23 @@ package dev.joshlucem.nullithstudios.bestsupplies.service;
 
 import dev.joshlucem.nullithstudios.bestsupplies.BestSupplies;
 import dev.joshlucem.nullithstudios.bestsupplies.config.ConfigManager;
-import dev.joshlucem.nullithstudios.bestsupplies.model.FoodPackDefinition;
-import dev.joshlucem.nullithstudios.bestsupplies.model.RankDefinition;
+import dev.joshlucem.nullithstudios.bestsupplies.model.RationDefinition;
 import dev.joshlucem.nullithstudios.bestsupplies.storage.Database;
+import dev.joshlucem.nullithstudios.bestsupplies.util.ItemParser;
 import dev.joshlucem.nullithstudios.bestsupplies.util.Text;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
-import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class FoodService {
+
+    private static final long ONE_TIME_CLAIMED = Long.MAX_VALUE;
 
     private final BestSupplies plugin;
     private final Database database;
@@ -31,147 +37,177 @@ public class FoodService {
         this.rewardService = rewardService;
     }
 
-    /**
-     * Get the food packs available for a player based on their rank
-     */
-    public Map<String, FoodPackDefinition> getAvailablePacks(Player player) {
-        RankDefinition rank = rankService.detectRank(player);
-        if (rank == null) {
-            return new HashMap<>();
+    public List<RationDefinition> getAllRations() {
+        return configManager.getRations();
+    }
+
+    public RationDefinition getRation(String rationId) {
+        return configManager.getRation(rationId);
+    }
+
+    public boolean canAccessRation(Player player, RationDefinition ration) {
+        if (ration == null) {
+            return false;
         }
-        return rank.getPacks();
-    }
-
-    /**
-     * Get the cooldown duration for a player's rank
-     */
-    public Duration getCooldownDuration(Player player) {
-        RankDefinition rank = rankService.detectRank(player);
-        if (rank == null) {
-            return Duration.ofHours(24);
+        String requiredMinRank = ration.getRequiredMinRank();
+        if (requiredMinRank == null || requiredMinRank.isBlank()) {
+            return true;
         }
-        return Duration.ofMillis(rank.getFoodCooldownMs());
+        return rankService.isAtLeastRank(player, requiredMinRank);
     }
 
-    /**
-     * Check if a specific pack is available for claiming
-     */
-    public boolean isPackAvailable(Player player, String packId) {
-        long nextClaimAt = database.getFoodClaimNextAt(player.getUniqueId().toString(), packId);
-        return System.currentTimeMillis() >= nextClaimAt;
+    public boolean canAccessRation(Player player, String rationId) {
+        RationDefinition ration = getRation(rationId);
+        return canAccessRation(player, ration);
     }
 
-    /**
-     * Get time until pack is available (0 if already available)
-     */
-    public long getTimeUntilAvailable(Player player, String packId) {
-        long nextClaimAt = database.getFoodClaimNextAt(player.getUniqueId().toString(), packId);
+    public RationStatus getRationStatus(Player player, String rationId) {
+        RationDefinition ration = getRation(rationId);
+        if (ration == null) {
+            return RationStatus.LOCKED;
+        }
+        return getRationStatus(player, ration);
+    }
+
+    public RationStatus getRationStatus(Player player, RationDefinition ration) {
+        if (ration == null) {
+            return RationStatus.LOCKED;
+        }
+
+        if (!canAccessRation(player, ration)) {
+            return RationStatus.LOCKED;
+        }
+
+        long nextClaimAt = database.getFoodClaimNextAt(player.getUniqueId().toString(), ration.getId());
+
+        if (ration.isOneTime()) {
+            return nextClaimAt == ONE_TIME_CLAIMED ? RationStatus.CLAIMED : RationStatus.READY;
+        }
+
+        return System.currentTimeMillis() >= nextClaimAt ? RationStatus.READY : RationStatus.COOLDOWN;
+    }
+
+    public long getTimeUntilAvailable(Player player, String rationId) {
+        RationDefinition ration = getRation(rationId);
+        if (ration == null) {
+            return 0;
+        }
+
+        long nextClaimAt = database.getFoodClaimNextAt(player.getUniqueId().toString(), ration.getId());
+        if (ration.isOneTime()) {
+            return nextClaimAt == ONE_TIME_CLAIMED ? Long.MAX_VALUE : 0;
+        }
+
         long now = System.currentTimeMillis();
-        
         if (now >= nextClaimAt) {
             return 0;
         }
-        
         return nextClaimAt - now;
     }
 
-    /**
-     * Get the status of a pack for a player
-     */
-    public PackStatus getPackStatus(Player player, String packId) {
-        // Check if player has this pack available
-        Map<String, FoodPackDefinition> packs = getAvailablePacks(player);
-        if (!packs.containsKey(packId)) {
-            return PackStatus.NOT_AVAILABLE;
+    public String formatTimeUntilAvailable(Player player, String rationId) {
+        long millis = getTimeUntilAvailable(player, rationId);
+        if (millis == Long.MAX_VALUE) {
+            return "agotada";
         }
-
-        if (isPackAvailable(player, packId)) {
-            return PackStatus.READY;
-        }
-
-        return PackStatus.COOLDOWN;
+        return timeService.formatMillis(millis);
     }
 
-    /**
-     * Claim a food pack
-     */
-    public ClaimResult claimPack(Player player, String packId) {
-        // Check if player has this pack available
-        Map<String, FoodPackDefinition> packs = getAvailablePacks(player);
-        FoodPackDefinition pack = packs.get(packId);
-        
-        if (pack == null) {
-            return ClaimResult.NOT_AVAILABLE;
+    public boolean hasAnyReadyRation(Player player) {
+        for (RationDefinition ration : getAllRations()) {
+            if (getRationStatus(player, ration) == RationStatus.READY) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public ClaimResult claimRation(Player player, String rationId) {
+        RationDefinition ration = getRation(rationId);
+        if (ration == null) {
+            return ClaimResult.NOT_FOUND;
         }
 
-        // Check cooldown
-        if (!isPackAvailable(player, packId)) {
+        if (!canAccessRation(player, ration)) {
+            return ClaimResult.LOCKED;
+        }
+
+        RationStatus status = getRationStatus(player, ration);
+        if (status == RationStatus.CLAIMED) {
+            return ClaimResult.ALREADY_CLAIMED;
+        }
+        if (status == RationStatus.COOLDOWN) {
             return ClaimResult.COOLDOWN;
         }
+        if (status == RationStatus.LOCKED) {
+            return ClaimResult.LOCKED;
+        }
 
-        // Set next claim time
-        Duration cooldown = getCooldownDuration(player);
-        long nextClaimAt = System.currentTimeMillis() + cooldown.toMillis();
-        database.setFoodClaimNextAt(player.getUniqueId().toString(), packId, nextClaimAt);
+        String rankId = rankService.detectRankId(player);
+        List<String> rewardStrings = buildRewardList(ration, rankId);
+        List<ItemStack> rewards = ItemParser.parseItems(rewardStrings);
+        rewardService.giveItemsOrPending(player, rewards);
 
-        // Give items
-        rewardService.giveFoodPackItems(player, pack.getItems());
+        long nextClaimAt;
+        if (ration.isOneTime()) {
+            nextClaimAt = ONE_TIME_CLAIMED;
+        } else {
+            nextClaimAt = System.currentTimeMillis() + Math.max(0, ration.getCooldownMs());
+        }
+
+        database.setFoodClaimNextAt(player.getUniqueId().toString(), ration.getId(), nextClaimAt);
 
         Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("%pack%", pack.getDisplayName());
+        placeholders.put("%pack%", ration.getDisplayName());
         Text.sendPrefixed(player, configManager.getMessage("food.claim-success", placeholders), configManager);
 
-        plugin.debug("Pack de comida reclamado por " + player.getName() + ": " + packId);
+        plugin.debug("Racion reclamada por " + player.getName() + ": " + ration.getId());
 
         return ClaimResult.SUCCESS;
     }
 
-    /**
-     * Reset food cooldown for a player (admin)
-     */
-    public void resetFoodCooldown(Player target, String packId) {
-        if (packId == null || packId.isEmpty()) {
-            // Reset all packs
-            database.resetAllFoodClaims(target.getUniqueId().toString());
-            plugin.debug("Todos los cooldowns de comida reseteados para " + target.getName());
-        } else {
-            // Reset specific pack
-            database.resetFoodClaim(target.getUniqueId().toString(), packId);
-            plugin.debug("Cooldown de comida reseteado para " + target.getName() + ": " + packId);
+    private List<String> buildRewardList(RationDefinition ration, String rankId) {
+        List<String> rewards = new ArrayList<>();
+
+        List<String> fixed = ration.resolveRewards(rankId);
+        if (fixed != null) {
+            rewards.addAll(fixed);
         }
+
+        List<String> randomPool = ration.resolveRandomRewards(rankId);
+        if (randomPool != null && !randomPool.isEmpty() && ration.getRandomPicks() > 0) {
+            List<String> copy = new ArrayList<>(randomPool);
+            Collections.shuffle(copy, ThreadLocalRandom.current());
+            int picks = Math.min(ration.getRandomPicks(), copy.size());
+            rewards.addAll(copy.subList(0, picks));
+        }
+
+        return rewards;
     }
 
-    /**
-     * Format the cooldown time for display
-     */
-    public String formatCooldown(Player player) {
-        Duration cooldown = getCooldownDuration(player);
-        return timeService.formatDuration(cooldown);
+    public void resetFoodCooldown(Player target, String rationId) {
+        if (rationId == null || rationId.isEmpty()) {
+            database.resetAllFoodClaims(target.getUniqueId().toString());
+            plugin.debug("Todos los cooldowns de raciones reseteados para " + target.getName());
+            return;
+        }
+
+        database.resetFoodClaim(target.getUniqueId().toString(), rationId);
+        plugin.debug("Cooldown de racion reseteado para " + target.getName() + ": " + rationId);
     }
 
-    /**
-     * Format the time until available for a specific pack
-     */
-    public String formatTimeUntilAvailable(Player player, String packId) {
-        long millis = getTimeUntilAvailable(player, packId);
-        return timeService.formatMillis(millis);
+    public enum RationStatus {
+        READY,
+        COOLDOWN,
+        LOCKED,
+        CLAIMED
     }
 
-    /**
-     * Pack status enum
-     */
-    public enum PackStatus {
-        READY,          // Pack is available to claim
-        COOLDOWN,       // Pack is on cooldown
-        NOT_AVAILABLE   // Pack not available for this rank
-    }
-
-    /**
-     * Claim result enum
-     */
     public enum ClaimResult {
         SUCCESS,
         COOLDOWN,
-        NOT_AVAILABLE
+        LOCKED,
+        ALREADY_CLAIMED,
+        NOT_FOUND
     }
 }

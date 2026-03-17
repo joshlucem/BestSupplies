@@ -8,21 +8,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * PlaceholderAPI expansion for BestSupplies.
- * 
- * Available placeholders:
- * - %bestsupplies_streak% - Current daily streak
- * - %bestsupplies_rank% - Current player rank
- * - %bestsupplies_rank_display% - Rank display name
- * - %bestsupplies_daily_status% - Daily claim status (available/claimed/expired)
- * - %bestsupplies_bank_status% - Bank cheque status (available/claimed)
- * - %bestsupplies_food_status% - Food rations status (available/cooldown)
- * - %bestsupplies_pending_count% - Number of pending items
- * - %bestsupplies_weekly_amount% - Weekly cheque amount for player's rank
- * - %bestsupplies_next_daily% - Time until next daily reset
- * - %bestsupplies_next_weekly% - Time until next weekly reset
- */
 public class BestSuppliesPlaceholders extends PlaceholderExpansion {
 
     private final BestSupplies plugin;
@@ -38,8 +23,8 @@ public class BestSuppliesPlaceholders extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getAuthor() {
-        return plugin.getDescription().getAuthors().isEmpty() 
-                ? "NullithStudios" 
+        return plugin.getDescription().getAuthors().isEmpty()
+                ? "NullithStudios"
                 : plugin.getDescription().getAuthors().get(0);
     }
 
@@ -61,7 +46,6 @@ public class BestSuppliesPlaceholders extends PlaceholderExpansion {
 
         Player player = offlinePlayer.getPlayer();
         if (player == null) {
-            // Offline player - limited info available
             return handleOfflinePlayer(offlinePlayer, params);
         }
 
@@ -69,11 +53,12 @@ public class BestSuppliesPlaceholders extends PlaceholderExpansion {
             case "streak" -> getStreak(player);
             case "rank" -> getRank(player);
             case "rank_display" -> getRankDisplay(player);
+            case "rank_tag" -> getRankTag(player);
             case "daily_status" -> getDailyStatus(player);
             case "bank_status" -> getBankStatus(player);
             case "food_status" -> getFoodStatus(player);
             case "pending_count" -> getPendingCount(player);
-            case "weekly_amount" -> getWeeklyAmount(player);
+            case "monthly_today_amount", "weekly_amount" -> getMonthlyTodayAmount(player);
             case "next_daily" -> getNextDaily();
             case "next_weekly" -> getNextWeekly();
             default -> null;
@@ -81,7 +66,6 @@ public class BestSuppliesPlaceholders extends PlaceholderExpansion {
     }
 
     private String handleOfflinePlayer(OfflinePlayer offlinePlayer, String params) {
-        // Limited data for offline players from database
         if (params.equalsIgnoreCase("streak")) {
             PlayerState state = plugin.getDatabase().getPlayerState(offlinePlayer.getUniqueId().toString());
             if (state != null) {
@@ -103,38 +87,32 @@ public class BestSuppliesPlaceholders extends PlaceholderExpansion {
     }
 
     private String getRankDisplay(Player player) {
-        RankDefinition rank = plugin.getRankService().detectRank(player);
-        return rank != null ? rank.getDisplayName() : "Aventurero";
+        return plugin.getRankService().getRankTag(player);
+    }
+
+    private String getRankTag(Player player) {
+        return plugin.getRankService().getRankTag(player);
     }
 
     private String getDailyStatus(Player player) {
         if (plugin.getDailyService().hasClaimedToday(player)) {
             return plugin.getConfigManager().getMessage("placeholders.daily-claimed");
         }
-        return plugin.getConfigManager().getMessage("placeholders.daily-available");
+        return plugin.getConfigManager().getMessage("placeholders.daily-pending");
     }
 
     private String getBankStatus(Player player) {
-        if (plugin.getBankService().hasClaimedWeekly(player)) {
-            return plugin.getConfigManager().getMessage("placeholders.bank-claimed");
+        if (plugin.getBankService().hasPendingMonthlyClaims(player)) {
+            return plugin.getConfigManager().getMessage("placeholders.bank-pending");
         }
-        return plugin.getConfigManager().getMessage("placeholders.bank-available");
+        return plugin.getConfigManager().getMessage("placeholders.bank-claimed");
     }
 
     private String getFoodStatus(Player player) {
-        RankDefinition rank = plugin.getRankService().detectRank(player);
-        if (rank == null) {
-            return plugin.getConfigManager().getMessage("placeholders.food-unavailable");
+        if (plugin.getFoodService().hasAnyReadyRation(player)) {
+            return plugin.getConfigManager().getMessage("placeholders.food-pending");
         }
-
-        // Check if any pack is available
-        boolean anyAvailable = rank.getPacks().keySet().stream()
-                .anyMatch(packId -> plugin.getFoodService().isPackAvailable(player, packId));
-
-        if (anyAvailable) {
-            return plugin.getConfigManager().getMessage("placeholders.food-available");
-        }
-        return plugin.getConfigManager().getMessage("placeholders.food-cooldown");
+        return plugin.getConfigManager().getMessage("placeholders.food-claimed");
     }
 
     private String getPendingCount(Player player) {
@@ -142,12 +120,10 @@ public class BestSuppliesPlaceholders extends PlaceholderExpansion {
         return String.valueOf(count);
     }
 
-    private String getWeeklyAmount(Player player) {
-        RankDefinition rank = plugin.getRankService().detectRank(player);
-        if (rank == null) {
-            return "$0";
-        }
-        return "$" + String.format("%,.2f", rank.getWeeklyMoney());
+    private String getMonthlyTodayAmount(Player player) {
+        java.time.LocalDate today = plugin.getTimeService().getCurrentDate();
+        double amount = plugin.getBankService().getMonthlyAmount(player, today);
+        return "€" + String.format("%,.2f", amount);
     }
 
     private String getNextDaily() {

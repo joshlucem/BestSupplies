@@ -9,29 +9,23 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.time.DayOfWeek;
-import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class DailyGui extends BaseGui {
 
-    private static final DayOfWeek[] DAYS_ORDER = {
-        DayOfWeek.MONDAY,
-        DayOfWeek.TUESDAY,
-        DayOfWeek.WEDNESDAY,
-        DayOfWeek.THURSDAY,
-        DayOfWeek.FRIDAY,
-        DayOfWeek.SATURDAY,
-        DayOfWeek.SUNDAY
-    };
+    private static final int[] BLACK_SLOTS = {0, 8, 45, 53};
+    private static final int[] GRAY_SLOTS = {1, 2, 3, 4, 5, 6, 7, 9, 17, 18, 26, 27, 35, 36, 44, 46, 47, 48, 49, 50, 51, 52};
 
-    private static final int DEFAULT_STREAK_SLOT = 13;
-    private static final int DEFAULT_CLAIM_SLOT = 31;
-    private static final int DEFAULT_WEEK_START_SLOT = 19;
-    private static final int DEFAULT_BACK_SLOT = 49;
+    private static final int[] WEEK_SLOTS = {28, 20, 21, 13, 23, 24, 34};
+    private static final int[] WEEK_OFFSETS = {-3, -2, -1, 0, 1, 2, 3};
+
+    private static final int BACK_SLOT = 40;
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM");
 
     public DailyGui(BestSupplies plugin, Player player) {
         super(plugin, player);
@@ -41,148 +35,102 @@ public class DailyGui extends BaseGui {
 
     @Override
     protected void build() {
-        fillBorder(plugin.getConfigManager().getDecorationBorder());
-        fillEmpty(plugin.getConfigManager().getDecorationFiller());
+        fillEmpty(Material.WHITE_STAINED_GLASS_PANE);
+        setSlots(BLACK_SLOTS, ItemParser.createFiller(Material.BLACK_STAINED_GLASS_PANE));
+        setSlots(GRAY_SLOTS, ItemParser.createFiller(Material.GRAY_STAINED_GLASS_PANE));
 
-        buildStreakItem();
-        buildWeekDays();
-        buildClaimButton();
-
-        int backSlot = getSlot("daily", "back", DEFAULT_BACK_SLOT);
-        setItem(backSlot, createBackButton(), event -> plugin.getGuiManager().openHub(player));
+        buildWeek();
+        buildBackButton();
     }
 
-    private int[] resolveWeekSlots() {
-        int start = getSlot("daily", "week-start", DEFAULT_WEEK_START_SLOT);
-        int[] slots = new int[DAYS_ORDER.length];
-        for (int i = 0; i < DAYS_ORDER.length; i++) {
-            slots[i] = start + i;
-        }
-        return slots;
-    }
+    private void buildWeek() {
+        LocalDate today = plugin.getTimeService().getCurrentDate();
 
-    private void buildStreakItem() {
-        int streak = plugin.getDailyService().getStreak(player);
-        int bonusPercent = plugin.getRewardService().getStreakBonusPercent(streak);
+        for (int i = 0; i < WEEK_SLOTS.length; i++) {
+            int slot = WEEK_SLOTS[i];
+            int offset = WEEK_OFFSETS[i];
+            LocalDate date = today.plusDays(offset);
+            DailyService.DailyDateStatus status = plugin.getDailyService().getDateStatus(player, date);
 
-        Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("%streak%", String.valueOf(streak));
-        placeholders.put("%bonus%", String.valueOf(bonusPercent));
-
-        ItemStack item = ItemParser.createItem(
-            Material.EXPERIENCE_BOTTLE,
-            plugin.getConfigManager().getMessage("gui.daily.streak-item"),
-            getMessageList("gui.daily.streak-lore", placeholders),
-            null
-        );
-
-        int streakSlot = getSlot("daily", "streak", DEFAULT_STREAK_SLOT);
-        setItem(streakSlot, item);
-    }
-
-    private void buildWeekDays() {
-        DayOfWeek today = plugin.getTimeService().getCurrentDayOfWeek();
-        int[] weekSlots = resolveWeekSlots();
-
-        for (int i = 0; i < DAYS_ORDER.length; i++) {
-            DayOfWeek day = DAYS_ORDER[i];
-            int slot = weekSlots[i];
-
-            DailyRewardDefinition reward = plugin.getConfigManager().getDailyReward(day);
-            DailyService.DailyStatus status = plugin.getDailyService().getDayStatus(player, day);
-
-            setItem(slot, createDayItem(day, reward, status), event -> {
-                DayOfWeek currentToday = plugin.getTimeService().getCurrentDayOfWeek();
-                DailyService.DailyStatus currentStatus = plugin.getDailyService().getDayStatus(player, day);
-
-                if (day == currentToday && currentStatus == DailyService.DailyStatus.AVAILABLE) {
+            ItemStack item = createDateItem(date, status);
+            setItem(slot, item, event -> {
+                if (status == DailyService.DailyDateStatus.TODAY_AVAILABLE) {
                     claimToday();
                 }
             });
         }
     }
 
-    private ItemStack createDayItem(DayOfWeek day, DailyRewardDefinition reward, DailyService.DailyStatus status) {
-        Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("%day%", Text.getDayNameSpanish(day));
+    private ItemStack createDateItem(LocalDate date, DailyService.DailyDateStatus status) {
+        DailyRewardDefinition reward = plugin.getConfigManager().getDailyReward(date.getDayOfWeek());
+        Map<String, String> placeholders = Map.of(
+                "%day%", Text.getDayNameSpanish(date.getDayOfWeek()),
+                "%date%", date.format(DATE_FORMAT)
+        );
 
-        Material material;
-        String displayName;
+        Material icon;
+        String name;
         List<String> lore = new ArrayList<>();
 
         switch (status) {
-            case AVAILABLE -> {
-                material = reward != null ? reward.getIcon() : Material.CHEST;
-                displayName = plugin.getConfigManager().getMessage("gui.daily.day-available", placeholders);
-
-                if (reward != null) {
-                    lore.addAll(reward.getDescription());
-                    if (reward.hasMoney()) {
-                        lore.add("<gray>Dinero: <gold>$" + Text.formatMoney(reward.getMoney()) + "</gold></gray>");
-                    }
-                }
-                lore.addAll(plugin.getConfigManager().getMessageList("gui.daily.day-available-lore"));
+            case TODAY_AVAILABLE -> {
+                icon = Material.LIME_DYE;
+                name = plugin.getConfigManager().getMessage("gui.daily.today-available", placeholders);
+                lore.add("<green>Haz clic para reclamar la recompensa de hoy.</green>");
             }
-            case CLAIMED -> {
-                material = Material.LIME_DYE;
-                displayName = plugin.getConfigManager().getMessage("gui.daily.day-claimed", placeholders);
-                lore.addAll(plugin.getConfigManager().getMessageList("gui.daily.day-claimed-lore"));
+            case TODAY_CLAIMED -> {
+                icon = Material.ORANGE_DYE;
+                name = plugin.getConfigManager().getMessage("gui.daily.today-claimed", placeholders);
+                lore.add("<gray>Ya reclamaste la recompensa de hoy.</gray>");
             }
-            case EXPIRED -> {
-                material = Material.GRAY_DYE;
-                displayName = plugin.getConfigManager().getMessage("gui.daily.day-expired", placeholders);
-                lore.addAll(plugin.getConfigManager().getMessageList("gui.daily.day-expired-lore"));
+            case PAST_CLAIMED -> {
+                icon = Material.LIGHT_GRAY_DYE;
+                name = plugin.getConfigManager().getMessage("gui.daily.past-claimed", placeholders);
+                lore.add("<gray>Esta recompensa ya fue reclamada.</gray>");
             }
-            case LOCKED -> {
-                material = Material.RED_DYE;
-                displayName = plugin.getConfigManager().getMessage("gui.daily.day-locked", placeholders);
-                Duration timeUntil = plugin.getTimeService().getTimeUntilDay(day);
-                lore.addAll(getMessageList(
-                    "gui.daily.day-locked-lore",
-                    Map.of("%time%", plugin.getTimeService().formatDuration(timeUntil))
-                ));
+            case PAST_MISSED -> {
+                icon = Material.GRAY_DYE;
+                name = plugin.getConfigManager().getMessage("gui.daily.past-missed", placeholders);
+                lore.add("<gray>Esta recompensa expiro sin reclamar.</gray>");
+            }
+            case FUTURE_LOCKED -> {
+                icon = Material.YELLOW_DYE;
+                name = plugin.getConfigManager().getMessage("gui.daily.future-locked", placeholders);
+                lore.add("<gray>Se desbloqueara en los proximos dias.</gray>");
             }
             default -> {
-                material = Material.BARRIER;
-                displayName = plugin.getConfigManager().getMessage("gui.daily.day-locked", placeholders);
-                lore.add("<red>No disponible</red>");
+                icon = Material.BARRIER;
+                name = "<red>No disponible</red>";
             }
         }
 
-        return ItemParser.createItem(material, displayName, lore, null);
+        if (reward != null) {
+            lore.add("");
+            lore.add("<gray>Recompensa:</gray>");
+            if (reward.hasMoney()) {
+                lore.add("<gray>- Dinero: <gold>€" + Text.formatMoney(reward.getMoney()) + "</gold></gray>");
+            }
+            int shown = 0;
+            for (String itemStr : reward.getItems()) {
+                if (shown >= 3) {
+                    lore.add("<gray>- ...</gray>");
+                    break;
+                }
+                lore.add("<gray>- " + itemStr + "</gray>");
+                shown++;
+            }
+        }
+
+        return ItemParser.createItem(icon, name, lore, null);
     }
 
-    private void buildClaimButton() {
-        DayOfWeek today = plugin.getTimeService().getCurrentDayOfWeek();
-        DailyService.DailyStatus todayStatus = plugin.getDailyService().getDayStatus(player, today);
-        int claimSlot = getSlot("daily", "claim-today", DEFAULT_CLAIM_SLOT);
-
-        if (todayStatus == DailyService.DailyStatus.AVAILABLE) {
-            ItemStack item = ItemParser.createItem(
-                Material.DIAMOND,
-                plugin.getConfigManager().getMessage("gui.daily.claim-item"),
-                plugin.getConfigManager().getMessageList("gui.daily.claim-lore")
-            );
-            setItem(claimSlot, item, event -> claimToday());
-            return;
-        }
-
-        if (todayStatus == DailyService.DailyStatus.CLAIMED) {
-            ItemStack item = ItemParser.createItem(
-                Material.LIME_STAINED_GLASS_PANE,
-                plugin.getConfigManager().getMessage("gui.daily.claimed-item"),
-                plugin.getConfigManager().getMessageList("gui.daily.claimed-lore")
-            );
-            setItem(claimSlot, item);
-            return;
-        }
-
-        ItemStack item = ItemParser.createItem(
-            Material.BARRIER,
-            plugin.getConfigManager().getMessage("gui.daily.unavailable-item"),
-            plugin.getConfigManager().getMessageList("gui.daily.unavailable-lore")
+    private void buildBackButton() {
+        ItemStack back = ItemParser.createItem(
+                Material.CHEST_MINECART,
+                plugin.getConfigManager().getMessage("gui.daily.back-item"),
+                plugin.getConfigManager().getMessageList("gui.daily.back-lore")
         );
-        setItem(claimSlot, item);
+        setItem(BACK_SLOT, back, event -> plugin.getGuiManager().openHub(player));
     }
 
     private void claimToday() {
@@ -195,17 +143,10 @@ public class DailyGui extends BaseGui {
 
         if (result == DailyService.ClaimResult.ALREADY_CLAIMED) {
             Text.sendPrefixed(
-                player,
-                plugin.getConfigManager().getMessage("daily.already-claimed"),
-                plugin.getConfigManager()
+                    player,
+                    plugin.getConfigManager().getMessage("daily.already-claimed"),
+                    plugin.getConfigManager()
             );
         }
-    }
-
-    @Override
-    public void updateCountdowns() {
-        buildStreakItem();
-        buildWeekDays();
-        buildClaimButton();
     }
 }

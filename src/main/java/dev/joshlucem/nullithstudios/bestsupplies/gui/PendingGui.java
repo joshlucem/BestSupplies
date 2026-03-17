@@ -7,7 +7,6 @@ import dev.joshlucem.nullithstudios.bestsupplies.util.JsonUtil;
 import dev.joshlucem.nullithstudios.bestsupplies.util.Text;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -17,18 +16,14 @@ import java.util.Map;
 
 public class PendingGui extends BaseGui {
 
-    private static final int[] ENTRY_SLOTS = {
-        10, 11, 12, 13, 14, 15, 16,
-        19, 20, 21, 22, 23, 24, 25,
-        28, 29, 30, 31, 32, 33, 34,
-        37, 38, 39, 40, 41, 42, 43
-    };
+    private static final int[] BLACK_SLOTS = {0, 2, 8, 45, 47, 53};
+    private static final int[] GRAY_SLOTS = {1, 3, 4, 5, 6, 7, 9, 11, 17, 18, 20, 26, 27, 29, 35, 36, 38, 44, 46, 48, 49, 50, 51, 52};
+    private static final int[] CONTENT_SLOTS = {12, 13, 14, 15, 16, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 39, 40, 41, 42, 43};
 
-    private static final int PREV_PAGE_SLOT = 45;
-    private static final int WITHDRAW_ALL_SLOT = 46;
-    private static final int PAGE_INFO_SLOT = 47;
-    private static final int BACK_SLOT = 49;
-    private static final int NEXT_PAGE_SLOT = 53;
+    private static final int BACK_SLOT = 10;
+    private static final int PREV_SLOT = 19;
+    private static final int NEXT_SLOT = 28;
+    private static final int INFO_SLOT = 37;
 
     private List<PendingEntry> entries = List.of();
     private int page = 0;
@@ -40,56 +35,39 @@ public class PendingGui extends BaseGui {
 
     @Override
     protected void build() {
-        fillBorder(plugin.getConfigManager().getDecorationBorder());
-        fillEmpty(plugin.getConfigManager().getDecorationFiller());
+        fillEmpty(Material.WHITE_STAINED_GLASS_PANE);
+        setSlots(BLACK_SLOTS, ItemParser.createFiller(Material.BLACK_STAINED_GLASS_PANE));
+        setSlots(GRAY_SLOTS, ItemParser.createFiller(Material.GRAY_STAINED_GLASS_PANE));
 
         entries = plugin.getPendingService().getPendingEntries(player);
-        int totalPages = getTotalPages();
+        int totalPages = Math.max(1, (int) Math.ceil((double) entries.size() / CONTENT_SLOTS.length));
 
         if (page >= totalPages) {
             page = Math.max(0, totalPages - 1);
         }
 
-        if (entries.isEmpty()) {
-            buildEmptyState();
-        } else {
-            buildEntryItems();
-        }
-
-        buildControls(totalPages);
+        buildEntries();
+        buildInfo(totalPages);
+        buildNavigation(totalPages);
+        buildBackButton();
     }
 
-    private int getTotalPages() {
-        if (entries.isEmpty()) {
-            return 1;
-        }
-        return (int) Math.ceil((double) entries.size() / ENTRY_SLOTS.length);
-    }
+    private void buildEntries() {
+        int start = page * CONTENT_SLOTS.length;
 
-    private void buildEmptyState() {
-        ItemStack item = ItemParser.createItem(
-            Material.BARRIER,
-            plugin.getConfigManager().getMessage("gui.pending.empty-item"),
-            List.of(plugin.getConfigManager().getMessage("pending.empty"))
-        );
-        setItem(22, item);
-    }
+        for (int i = 0; i < CONTENT_SLOTS.length; i++) {
+            int slot = CONTENT_SLOTS[i];
+            int index = start + i;
 
-    private void buildEntryItems() {
-        int startIndex = page * ENTRY_SLOTS.length;
-        int endIndex = Math.min(startIndex + ENTRY_SLOTS.length, entries.size());
+            if (index >= entries.size()) {
+                setItem(slot, ItemParser.createFiller(Material.WHITE_STAINED_GLASS_PANE));
+                continue;
+            }
 
-        int slotCursor = 0;
-        for (int index = startIndex; index < endIndex; index++) {
             PendingEntry entry = entries.get(index);
-            int slot = ENTRY_SLOTS[slotCursor++];
-
             setItem(slot, createEntryItem(entry), event -> {
-                if (event.getClick() == ClickType.SHIFT_LEFT || event.getClick() == ClickType.SHIFT_RIGHT) {
-                    withdrawAll();
-                } else {
-                    withdrawEntry(entry);
-                }
+                plugin.getPendingService().withdrawPending(player, entry);
+                rebuild();
             });
         }
     }
@@ -126,7 +104,7 @@ public class PendingGui extends BaseGui {
             material = Material.PAPER;
             JsonUtil.ChequePayload cheque = JsonUtil.deserializeCheque(entry.getPayload());
             if (cheque != null) {
-                lore.add("<gray>Cheque: <gold>$" + Text.formatMoney(cheque.amount()) + "</gold></gray>");
+                lore.add("<gray>Cheque: <gold>€" + Text.formatMoney(cheque.amount()) + "</gold></gray>");
                 lore.add("<gray>Periodo: " + cheque.weekKey() + "</gray>");
             } else {
                 lore.add("<gray>Cheque sin datos.</gray>");
@@ -140,69 +118,76 @@ public class PendingGui extends BaseGui {
         lore.addAll(plugin.getConfigManager().getMessageList("gui.pending.withdraw-lore"));
 
         return ItemParser.createItem(
-            material,
-            plugin.getConfigManager().getMessage("gui.pending.item-entry", placeholders),
-            lore,
-            null
+                material,
+                plugin.getConfigManager().getMessage("gui.pending.item-entry", placeholders),
+                lore,
+                null
         );
     }
 
-    private void buildControls(int totalPages) {
-        setItem(BACK_SLOT, createBackButton(), event -> plugin.getGuiManager().openHub(player));
-
-        ItemStack pageInfo = ItemParser.createItem(
-            Material.BOOK,
-            plugin.getConfigManager().getMessage("gui.pending.page-item", Map.of(
+    private void buildInfo(int totalPages) {
+        Map<String, String> placeholders = Map.of(
+                "%bestsupplies_rank_tag%", plugin.getRankService().getRankTag(player),
                 "%page%", String.valueOf(page + 1),
-                "%total%", String.valueOf(totalPages)
-            )),
-            plugin.getConfigManager().getMessageList("gui.pending.page-lore")
+                "%total%", String.valueOf(totalPages),
+                "%count%", String.valueOf(entries.size())
         );
-        setItem(PAGE_INFO_SLOT, pageInfo);
 
-        if (!entries.isEmpty()) {
-            ItemStack withdrawAll = ItemParser.createItem(
-                Material.HOPPER,
-                plugin.getConfigManager().getMessage("gui.pending.withdraw-all-item"),
-                plugin.getConfigManager().getMessageList("gui.pending.withdraw-all-lore")
-            );
-            setItem(WITHDRAW_ALL_SLOT, withdrawAll, event -> withdrawAll());
-        } else {
-            setItem(WITHDRAW_ALL_SLOT, ItemParser.createFiller(plugin.getConfigManager().getDecorationFiller()));
-        }
+        ItemStack info = ItemParser.createItem(
+                Material.BOOK,
+                plugin.getConfigManager().getMessage("gui.pending.info-item", placeholders),
+                getMessageList("gui.pending.info-lore", placeholders),
+                null
+        );
+        setItem(INFO_SLOT, info);
+    }
+
+    private void buildNavigation(int totalPages) {
+        String backId = plugin.getConfigManager().getItemsAdderIcon("nav-back", "_iainternal:icon_back_orange");
+        String nextId = plugin.getConfigManager().getItemsAdderIcon("nav-next", "_iainternal:icon_next_orange");
+        String cancelId = plugin.getConfigManager().getItemsAdderIcon("nav-cancel", "_iainternal:icon_cancel");
 
         if (page > 0) {
-            ItemStack prev = ItemParser.createItem(
-                Material.ARROW,
-                plugin.getConfigManager().getMessage("gui.pending.prev-page-item"),
-                null
+            setItem(
+                    PREV_SLOT,
+                    createIconItem(backId, Material.ARROW,
+                            plugin.getConfigManager().getMessage("gui.common.prev-page-item"),
+                            plugin.getConfigManager().getMessageList("gui.common.prev-page-lore")),
+                    event -> {
+                        page--;
+                        rebuild();
+                    }
             );
-            setItem(PREV_PAGE_SLOT, prev, event -> {
-                page--;
-                rebuild();
-            });
+        } else {
+            setItem(PREV_SLOT, createIconItem(cancelId, Material.BARRIER,
+                    plugin.getConfigManager().getMessage("gui.common.no-prev-item"),
+                    plugin.getConfigManager().getMessageList("gui.common.no-prev-lore")));
         }
 
         if (page + 1 < totalPages) {
-            ItemStack next = ItemParser.createItem(
-                Material.ARROW,
-                plugin.getConfigManager().getMessage("gui.pending.next-page-item"),
-                null
+            setItem(
+                    NEXT_SLOT,
+                    createIconItem(nextId, Material.ARROW,
+                            plugin.getConfigManager().getMessage("gui.common.next-page-item"),
+                            plugin.getConfigManager().getMessageList("gui.common.next-page-lore")),
+                    event -> {
+                        page++;
+                        rebuild();
+                    }
             );
-            setItem(NEXT_PAGE_SLOT, next, event -> {
-                page++;
-                rebuild();
-            });
+        } else {
+            setItem(NEXT_SLOT, createIconItem(cancelId, Material.BARRIER,
+                    plugin.getConfigManager().getMessage("gui.common.no-next-item"),
+                    plugin.getConfigManager().getMessageList("gui.common.no-next-lore")));
         }
     }
 
-    private void withdrawEntry(PendingEntry entry) {
-        plugin.getPendingService().withdrawPending(player, entry);
-        rebuild();
-    }
-
-    private void withdrawAll() {
-        plugin.getPendingService().withdrawAllPending(player);
-        rebuild();
+    private void buildBackButton() {
+        ItemStack back = ItemParser.createItem(
+                Material.CHEST_MINECART,
+                plugin.getConfigManager().getMessage("gui.pending.back-item"),
+                plugin.getConfigManager().getMessageList("gui.pending.back-lore")
+        );
+        setItem(BACK_SLOT, back, event -> plugin.getGuiManager().openHub(player));
     }
 }

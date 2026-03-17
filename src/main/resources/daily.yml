@@ -1,95 +1,438 @@
 ﻿# ==============================================
-# BestSupplies - Recompensas Diarias
+# BestSupplies - Diarias y Raciones
 # ==============================================
-# Dias validos: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
 
 rewards:
   MONDAY:
-    icon: BREAD
-    money: 90
+    icon: LIME_DYE
+    money: 250
     items:
-      - "BREAD:6"
-      - "COOKED_BEEF:4"
-    display-name: "<gold>Lunes - Provisiones</gold>"
+      - "BREAD:4"
+      - "TORCH:16"
+    display-name: "<green>Recompensa de Lunes</green>"
     description:
-      - "<gray>Inicio de semana con recursos basicos.</gray>"
+      - "<gray>Inicio de semana.</gray>"
 
   TUESDAY:
-    icon: IRON_INGOT
-    money: 105
+    icon: LIME_DYE
+    money: 275
     items:
-      - "IRON_INGOT:3"
+      - "COOKED_BEEF:4"
       - "COAL:12"
-    display-name: "<gray>Martes - Recursos</gray>"
+    display-name: "<green>Recompensa de Martes</green>"
     description:
-      - "<gray>Materiales utiles para mineria y hornos.</gray>"
+      - "<gray>Recursos de apoyo.</gray>"
 
   WEDNESDAY:
-    icon: COOKED_SALMON
-    money: 120
+    icon: LIME_DYE
+    money: 300
     items:
-      - "COOKED_SALMON:6"
-      - "GOLDEN_CARROT:4"
-    display-name: "<yellow>Miercoles - Suministros</yellow>"
+      - "IRON_INGOT:3"
+      - "BREAD:4"
+    display-name: "<green>Recompensa de Miercoles</green>"
     description:
-      - "<gray>Comida para seguir activo.</gray>"
+      - "<gray>Mitad de semana.</gray>"
 
   THURSDAY:
-    icon: EXPERIENCE_BOTTLE
-    money: 115
+    icon: LIME_DYE
+    money: 325
     items:
-      - "EXPERIENCE_BOTTLE:6"
-      - "BOOK:1"
-    display-name: "<green>Jueves - Conocimiento</green>"
+      - "EXPERIENCE_BOTTLE:8"
+      - "GOLDEN_CARROT:4"
+    display-name: "<green>Recompensa de Jueves</green>"
     description:
-      - "<gray>Ayuda para progresar encantamientos.</gray>"
+      - "<gray>Refuerzo de progreso.</gray>"
 
   FRIDAY:
-    icon: LAPIS_LAZULI
-    money: 140
+    icon: LIME_DYE
+    money: 350
     items:
       - "DIAMOND:1"
-      - "LAPIS_LAZULI:12"
-    display-name: "<aqua>Viernes - Tesoro</aqua>"
+      - "LAPIS_LAZULI:10"
+    display-name: "<green>Recompensa de Viernes</green>"
     description:
-      - "<gray>Recompensa de cierre de semana laboral.</gray>"
+      - "<gray>Cierre de semana laboral.</gray>"
 
   SATURDAY:
-    icon: EMERALD
-    money: 160
+    icon: LIME_DYE
+    money: 400
     items:
       - "EMERALD:1"
       - "GOLD_INGOT:4"
-    display-name: "<green>Sabado - Comercio</green>"
+    display-name: "<green>Recompensa de Sabado</green>"
     description:
-      - "<gray>Recursos utiles para intercambios.</gray>"
+      - "<gray>Bonus de fin de semana.</gray>"
 
   SUNDAY:
-    icon: NETHER_STAR
-    money: 220
+    icon: LIME_DYE
+    money: 500
     items:
-      - "DIAMOND:1"
-      - "EMERALD:2"
       - "GOLDEN_APPLE:1"
-    display-name: "<light_purple>Domingo - Gran Premio</light_purple>"
+      - "EXPERIENCE_BOTTLE:16"
+    display-name: "<green>Recompensa de Domingo</green>"
     description:
-      - "<gray>Mejor recompensa semanal por constancia.</gray>"
+      - "<gray>Gran cierre semanal.</gray>"
 
 streak-milestones:
   7:
-    bonus-money: 250
+    bonus-money: 500
     bonus-items:
       - "GOLDEN_APPLE:1"
-    message: "<gold>Semana completa de racha. Bonus otorgado.</gold>"
+    message: "<gold>7 dias de racha. Bonus entregado.</gold>"
   14:
-    bonus-money: 600
+    bonus-money: 1200
     bonus-items:
       - "DIAMOND:2"
-      - "EXPERIENCE_BOTTLE:16"
-    message: "<gold>Dos semanas seguidas. Excelente constancia.</gold>"
+      - "EXPERIENCE_BOTTLE:24"
+    message: "<gold>14 dias de racha. Excelente constancia.</gold>"
   30:
-    bonus-money: 1500
+    bonus-money: 3500
     bonus-items:
       - "NETHERITE_SCRAP:1"
       - "ANCIENT_DEBRIS:2"
     message: "<gold>30 dias de racha. Recompensa legendaria.</gold>"
+
+rations:
+  starter_blocks:
+    order: 1
+    icon: BRICKS
+    display-name: "<gold>Racion Basica: Bloques</gold>"
+    description:
+      - "<gray>Da 4 de madera y 8 palos.</gray>"
+      - "<gray>Solo se puede abrir 1 vez.</gray>"
+    one-time: true
+    rewards:
+      - "OAK_LOG:4"
+      - "STICK:8"
+
+  starter_wool:
+    order: 2
+    icon: LIGHT_BLUE_WOOL
+    display-name: "<gold>Racion Basica: Lana</gold>"
+    description:
+      - "<gray>Da 3 de lana blanca y 1 tinte random.</gray>"
+      - "<gray>Solo se puede abrir 1 vez.</gray>"
+    one-time: true
+    rewards:
+      - "WHITE_WOOL:3"
+    random-rewards:
+      - "RED_DYE:1"
+      - "BLUE_DYE:1"
+      - "GREEN_DYE:1"
+      - "YELLOW_DYE:1"
+      - "BLACK_DYE:1"
+      - "WHITE_DYE:1"
+    random-picks: 1
+
+  starter_sapling:
+    order: 3
+    icon: GRASS_BLOCK
+    display-name: "<gold>Racion Basica: Brote</gold>"
+    description:
+      - "<gray>Da 1 brote random.</gray>"
+      - "<gray>Enfriamiento: 12 horas.</gray>"
+    cooldown: "12h"
+    random-rewards:
+      - "OAK_SAPLING:1"
+      - "SPRUCE_SAPLING:1"
+      - "BIRCH_SAPLING:1"
+      - "JUNGLE_SAPLING:1"
+      - "ACACIA_SAPLING:1"
+      - "DARK_OAK_SAPLING:1"
+    random-picks: 1
+
+  starter_tag:
+    order: 4
+    icon: OAK_SIGN
+    display-name: "<gold>Racion Basica: Etiqueta</gold>"
+    description:
+      - "<gray>Da 1 etiqueta.</gray>"
+      - "<gray>Enfriamiento: 24 horas.</gray>"
+    cooldown: "24h"
+    rewards:
+      - "NAME_TAG:1"
+
+  starter_redstone:
+    order: 5
+    icon: REDSTONE
+    display-name: "<gold>Racion Basica: Redstone</gold>"
+    description:
+      - "<gray>Da 1 bloque de redstone y 1 cofre trampa.</gray>"
+      - "<gray>Solo se puede abrir 1 vez.</gray>"
+    one-time: true
+    rewards:
+      - "REDSTONE_BLOCK:1"
+      - "TRAPPED_CHEST:1"
+
+  util_tools:
+    order: 6
+    icon: DIAMOND_PICKAXE
+    display-name: "<gold>Racion Util: Herramientas</gold>"
+    description:
+      - "<gray>Da herramientas utiles aleatorias.</gray>"
+      - "<gray>Enfriamiento: 3 dias.</gray>"
+    cooldown: "3d"
+    rewards:
+      - "ARROW:12"
+    random-rewards:
+      - "WOODEN_AXE:1"
+      - "STONE_AXE:1"
+      - "IRON_AXE:1"
+      - "DIAMOND_AXE:1"
+      - "WOODEN_PICKAXE:1"
+      - "STONE_PICKAXE:1"
+      - "IRON_PICKAXE:1"
+      - "DIAMOND_PICKAXE:1"
+      - "BOW:1"
+    random-picks: 1
+
+  combat_supply:
+    order: 7
+    icon: NETHERITE_SWORD
+    display-name: "<gold>Racion Combate</gold>"
+    description:
+      - "<gray>Premio de combate segun rango.</gray>"
+      - "<gray>Enfriamiento: 3 dias.</gray>"
+    cooldown: "3d"
+    rewards:
+      default:
+        - "ARROW:16"
+        - "POTION:1"
+      coal:
+        - "ARROW:20"
+        - "POTION:1"
+      boost:
+        - "ARROW:24"
+        - "POTION:2"
+      influencer:
+        - "ARROW:26"
+        - "POTION:2"
+      iron:
+        - "ARROW:28"
+        - "POTION:2"
+        - "GOLDEN_APPLE:1"
+      gold:
+        - "ARROW:30"
+        - "POTION:3"
+        - "GOLDEN_APPLE:1"
+      diamond:
+        - "ARROW:32"
+        - "POTION:3"
+        - "GOLDEN_APPLE:2"
+      emerald:
+        - "ARROW:36"
+        - "POTION:4"
+        - "GOLDEN_APPLE:2"
+      ruby:
+        - "ARROW:40"
+        - "POTION:4"
+        - "GOLDEN_APPLE:2"
+      netherite:
+        - "ARROW:48"
+        - "POTION:5"
+        - "GOLDEN_APPLE:3"
+
+  food_supply:
+    order: 8
+    icon: GOLDEN_APPLE
+    display-name: "<gold>Racion Comida</gold>"
+    description:
+      - "<gray>Comida segun rango.</gray>"
+      - "<gray>Enfriamiento: 24 horas.</gray>"
+    cooldown: "24h"
+    rewards:
+      default:
+        - "BAKED_POTATO:8"
+        - "BREAD:8"
+      coal:
+        - "BAKED_POTATO:10"
+        - "BREAD:10"
+      boost:
+        - "BAKED_POTATO:12"
+        - "BREAD:12"
+      influencer:
+        - "BAKED_POTATO:14"
+        - "BREAD:14"
+      iron:
+        - "BAKED_POTATO:16"
+        - "COOKED_BEEF:8"
+      gold:
+        - "BAKED_POTATO:18"
+        - "COOKED_BEEF:10"
+      diamond:
+        - "BAKED_POTATO:20"
+        - "COOKED_BEEF:12"
+      emerald:
+        - "BAKED_POTATO:22"
+        - "COOKED_BEEF:14"
+      ruby:
+        - "BAKED_POTATO:24"
+        - "COOKED_BEEF:16"
+      netherite:
+        - "BAKED_POTATO:26"
+        - "COOKED_BEEF:20"
+
+  mineral_supply:
+    order: 9
+    icon: IRON_INGOT
+    display-name: "<gold>Racion Minerales</gold>"
+    description:
+      - "<gray>Minerales en bruto segun rango.</gray>"
+      - "<gray>Enfriamiento: 24 horas.</gray>"
+    cooldown: "24h"
+    rewards:
+      default:
+        - "RAW_IRON:2"
+        - "RAW_COPPER:2"
+      coal:
+        - "RAW_IRON:3"
+        - "RAW_COPPER:3"
+      boost:
+        - "RAW_IRON:3"
+        - "RAW_GOLD:2"
+      influencer:
+        - "RAW_IRON:4"
+        - "RAW_GOLD:2"
+      iron:
+        - "RAW_IRON:4"
+        - "RAW_GOLD:3"
+      gold:
+        - "RAW_IRON:5"
+        - "RAW_GOLD:3"
+      diamond:
+        - "RAW_IRON:5"
+        - "RAW_GOLD:4"
+      emerald:
+        - "RAW_IRON:6"
+        - "RAW_GOLD:4"
+      ruby:
+        - "RAW_IRON:6"
+        - "RAW_GOLD:5"
+      netherite:
+        - "RAW_IRON:6"
+        - "RAW_GOLD:6"
+
+  premium_iron_1:
+    order: 10
+    icon: AMETHYST_SHARD
+    display-name: "<gold>Racion Premium I</gold>"
+    description:
+      - "<gray>Racion premium desbloqueada por rango.</gray>"
+      - "<gray>Requiere Iron o superior.</gray>"
+    required-min-rank: iron
+    cooldown: "24h"
+    rewards:
+      - "AMETHYST_SHARD:8"
+      - "EXPERIENCE_BOTTLE:8"
+
+  premium_gold_1:
+    order: 11
+    icon: ENCHANTED_BOOK
+    display-name: "<gold>Racion Premium II</gold>"
+    description:
+      - "<gray>Requiere Gold o superior.</gray>"
+    required-min-rank: gold
+    cooldown: "24h"
+    rewards:
+      - "ENCHANTED_BOOK:1"
+      - "EXPERIENCE_BOTTLE:12"
+
+  premium_diamond_1:
+    order: 12
+    icon: TOTEM_OF_UNDYING
+    display-name: "<gold>Racion Premium III</gold>"
+    description:
+      - "<gray>Requiere Diamond o superior.</gray>"
+    required-min-rank: diamond
+    cooldown: "48h"
+    rewards:
+      - "TOTEM_OF_UNDYING:1"
+
+  premium_emerald_1:
+    order: 13
+    icon: ELYTRA
+    display-name: "<gold>Racion Premium IV</gold>"
+    description:
+      - "<gray>Requiere Emerald o superior.</gray>"
+    required-min-rank: emerald
+    cooldown: "72h"
+    rewards:
+      - "FIREWORK_ROCKET:24"
+
+  premium_ruby_1:
+    order: 14
+    icon: NETHERITE_INGOT
+    display-name: "<gold>Racion Premium V</gold>"
+    description:
+      - "<gray>Requiere Ruby o superior.</gray>"
+    required-min-rank: ruby
+    cooldown: "72h"
+    rewards:
+      - "NETHERITE_SCRAP:1"
+      - "ANCIENT_DEBRIS:1"
+
+  premium_netherite_1:
+    order: 15
+    icon: DRAGON_HEAD
+    display-name: "<gold>Racion Premium VI</gold>"
+    description:
+      - "<gray>Requiere Netherite.</gray>"
+    required-min-rank: netherite
+    cooldown: "7d"
+    rewards:
+      - "NETHER_STAR:1"
+
+  premium_iron_2:
+    order: 16
+    icon: SHULKER_SHELL
+    display-name: "<gold>Racion Premium VII</gold>"
+    description:
+      - "<gray>Requiere Iron o superior.</gray>"
+    required-min-rank: iron
+    cooldown: "36h"
+    rewards:
+      - "SHULKER_SHELL:2"
+
+  premium_gold_2:
+    order: 17
+    icon: ENDER_PEARL
+    display-name: "<gold>Racion Premium VIII</gold>"
+    description:
+      - "<gray>Requiere Gold o superior.</gray>"
+    required-min-rank: gold
+    cooldown: "36h"
+    rewards:
+      - "ENDER_PEARL:8"
+
+  premium_diamond_2:
+    order: 18
+    icon: DIAMOND
+    display-name: "<gold>Racion Premium IX</gold>"
+    description:
+      - "<gray>Requiere Diamond o superior.</gray>"
+    required-min-rank: diamond
+    cooldown: "48h"
+    rewards:
+      - "DIAMOND:3"
+
+  premium_emerald_2:
+    order: 19
+    icon: EMERALD
+    display-name: "<gold>Racion Premium X</gold>"
+    description:
+      - "<gray>Requiere Emerald o superior.</gray>"
+    required-min-rank: emerald
+    cooldown: "48h"
+    rewards:
+      - "EMERALD:6"
+
+  premium_ruby_2:
+    order: 20
+    icon: GOLDEN_APPLE
+    display-name: "<gold>Racion Premium XI</gold>"
+    description:
+      - "<gray>Requiere Ruby o superior.</gray>"
+    required-min-rank: ruby
+    cooldown: "72h"
+    rewards:
+      - "ENCHANTED_GOLDEN_APPLE:1"

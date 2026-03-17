@@ -20,9 +20,6 @@ public class GuiManager {
         this.updateTasks = new HashMap<>();
     }
 
-    /**
-     * Open the main hub GUI
-     */
     public void openHub(Player player) {
         closeCurrentGui(player);
         HubGui gui = new HubGui(plugin, player);
@@ -30,31 +27,20 @@ public class GuiManager {
         gui.open();
     }
 
-    /**
-     * Open the daily rewards GUI
-     */
     public void openDaily(Player player) {
         closeCurrentGui(player);
         DailyGui gui = new DailyGui(plugin, player);
         registerGui(player, gui);
         gui.open();
-        startUpdateTask(player, gui);
     }
 
-    /**
-     * Open the bank GUI
-     */
     public void openBank(Player player) {
         closeCurrentGui(player);
         BankGui gui = new BankGui(plugin, player);
         registerGui(player, gui);
         gui.open();
-        startUpdateTask(player, gui);
     }
 
-    /**
-     * Open the food GUI
-     */
     public void openFood(Player player) {
         closeCurrentGui(player);
         FoodGui gui = new FoodGui(plugin, player);
@@ -63,20 +49,10 @@ public class GuiManager {
         startUpdateTask(player, gui);
     }
 
-    /**
-     * Open the status GUI
-     */
     public void openStatus(Player player) {
-        closeCurrentGui(player);
-        StatusGui gui = new StatusGui(plugin, player);
-        registerGui(player, gui);
-        gui.open();
-        startUpdateTask(player, gui);
+        openHub(player);
     }
 
-    /**
-     * Open the pending GUI
-     */
     public void openPending(Player player) {
         closeCurrentGui(player);
         PendingGui gui = new PendingGui(plugin, player);
@@ -84,45 +60,27 @@ public class GuiManager {
         gui.open();
     }
 
-    /**
-     * Register a GUI for a player
-     */
     private void registerGui(Player player, BaseGui gui) {
         openGuis.put(player.getUniqueId(), gui);
     }
 
-    /**
-     * Get the current GUI for a player
-     */
     public BaseGui getGui(Player player) {
         return openGuis.get(player.getUniqueId());
     }
 
-    /**
-     * Get the current GUI for a player by UUID
-     */
     public BaseGui getGui(UUID uuid) {
         return openGuis.get(uuid);
     }
 
-    /**
-     * Check if player has a GUI open
-     */
     public boolean hasGuiOpen(Player player) {
         return openGuis.containsKey(player.getUniqueId());
     }
 
-    /**
-     * Close the current GUI for a player
-     */
     public void closeCurrentGui(Player player) {
         stopUpdateTask(player);
         openGuis.remove(player.getUniqueId());
     }
 
-    /**
-     * Handle GUI close event
-     */
     public void handleClose(Player player, BaseGui closedGui) {
         BaseGui current = openGuis.get(player.getUniqueId());
         if (current != closedGui) {
@@ -132,14 +90,11 @@ public class GuiManager {
         openGuis.remove(player.getUniqueId());
     }
 
-    /**
-     * Start a countdown update task for a GUI
-     */
     private void startUpdateTask(Player player, BaseGui gui) {
-        stopUpdateTask(player); // Cancel any existing task
+        stopUpdateTask(player);
 
         int interval = plugin.getConfigManager().getGuiUpdateInterval();
-        
+
         BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             if (!player.isOnline() || !hasGuiOpen(player)) {
                 stopUpdateTask(player);
@@ -157,9 +112,6 @@ public class GuiManager {
         updateTasks.put(player.getUniqueId(), task);
     }
 
-    /**
-     * Stop the update task for a player
-     */
     private void stopUpdateTask(Player player) {
         BukkitTask task = updateTasks.remove(player.getUniqueId());
         if (task != null && !task.isCancelled()) {
@@ -167,9 +119,6 @@ public class GuiManager {
         }
     }
 
-    /**
-     * Shutdown - cancel all tasks
-     */
     public void shutdown() {
         for (BukkitTask task : updateTasks.values()) {
             if (task != null && !task.isCancelled()) {
