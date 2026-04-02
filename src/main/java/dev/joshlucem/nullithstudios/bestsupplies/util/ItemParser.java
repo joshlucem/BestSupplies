@@ -3,6 +3,7 @@ package dev.joshlucem.nullithstudios.bestsupplies.util;
 import dev.joshlucem.nullithstudios.bestsupplies.BestSupplies;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ItemParser {
+
+    private static final PlainTextComponentSerializer PLAIN_TEXT = PlainTextComponentSerializer.plainText();
 
     private ItemParser() {
     }
@@ -136,6 +139,29 @@ public class ItemParser {
         }
 
         return items;
+    }
+
+    public static String describeItemString(String itemString) {
+        if (itemString == null || itemString.isBlank()) {
+            return "";
+        }
+
+        ItemStack item = parseItem(itemString);
+        if (item == null) {
+            return itemString;
+        }
+
+        String itemName = null;
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null && meta.displayName() != null) {
+            itemName = PLAIN_TEXT.serialize(meta.displayName()).trim();
+        }
+
+        if (itemName == null || itemName.isBlank()) {
+            itemName = BestSupplies.getInstance().getConfigManager().getItemName(item.getType());
+        }
+
+        return item.getAmount() + "x " + itemName;
     }
 
     public static ItemStack createItem(Material material, String displayName, List<String> lore) {

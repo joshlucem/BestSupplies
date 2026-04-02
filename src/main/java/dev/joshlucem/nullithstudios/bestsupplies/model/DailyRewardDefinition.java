@@ -7,16 +7,18 @@ import java.util.List;
 public class DailyRewardDefinition {
     
     private final Material icon;
-    private final double money;
+    private final double silverAmount;
+    private final double goldAmount;
     private final List<String> items;
     private final List<String> commands;
     private final String displayName;
     private final List<String> description;
 
-    public DailyRewardDefinition(Material icon, double money, List<String> items, 
+    public DailyRewardDefinition(Material icon, double silverAmount, double goldAmount, List<String> items,
                                   List<String> commands, String displayName, List<String> description) {
         this.icon = icon;
-        this.money = money;
+        this.silverAmount = silverAmount;
+        this.goldAmount = goldAmount;
         this.items = items;
         this.commands = commands;
         this.displayName = displayName;
@@ -27,8 +29,12 @@ public class DailyRewardDefinition {
         return icon;
     }
 
-    public double getMoney() {
-        return money;
+    public double getSilverAmount() {
+        return silverAmount;
+    }
+
+    public double getGoldAmount() {
+        return goldAmount;
     }
 
     public List<String> getItems() {
@@ -47,8 +53,12 @@ public class DailyRewardDefinition {
         return description;
     }
 
-    public boolean hasMoney() {
-        return money > 0;
+    public boolean hasSilver() {
+        return silverAmount > 0;
+    }
+
+    public boolean hasGold() {
+        return goldAmount > 0;
     }
 
     public boolean hasItems() {

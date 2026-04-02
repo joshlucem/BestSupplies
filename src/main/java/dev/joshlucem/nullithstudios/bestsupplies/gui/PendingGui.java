@@ -1,5 +1,6 @@
 package dev.joshlucem.nullithstudios.bestsupplies.gui;
 
+import dev.joshlucem.nullithstudios.balance.api.BalanceApi;
 import dev.joshlucem.nullithstudios.bestsupplies.BestSupplies;
 import dev.joshlucem.nullithstudios.bestsupplies.model.PendingEntry;
 import dev.joshlucem.nullithstudios.bestsupplies.util.ItemParser;
@@ -104,7 +105,7 @@ public class PendingGui extends BaseGui {
             material = Material.PAPER;
             JsonUtil.ChequePayload cheque = JsonUtil.deserializeCheque(entry.getPayload());
             if (cheque != null) {
-                lore.add("<gray>Cheque: <gold>€" + Text.formatMoney(cheque.amount()) + "</gold></gray>");
+                lore.add("<gray>Cheque: <gold>" + Text.formatCurrency(BalanceApi.CurrencyType.SILVER, cheque.amount()) + "</gold></gray>");
                 lore.add("<gray>Periodo: " + cheque.weekKey() + "</gray>");
             } else {
                 lore.add("<gray>Cheque sin datos.</gray>");

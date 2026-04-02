@@ -1,5 +1,6 @@
 package dev.joshlucem.nullithstudios.bestsupplies.command;
 
+import dev.joshlucem.nullithstudios.balance.api.BalanceApi;
 import dev.joshlucem.nullithstudios.bestsupplies.BestSupplies;
 import dev.joshlucem.nullithstudios.bestsupplies.model.PlayerState;
 import dev.joshlucem.nullithstudios.bestsupplies.model.RankDefinition;
@@ -163,7 +164,7 @@ public class SuppliesCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(Text.parse("<gray>/supplies admin reset daily <jugador></gray> - <white>Resetear diaria de hoy</white>"));
         sender.sendMessage(Text.parse("<gray>/supplies admin reset bank <jugador> [dia]</gray> - <white>Resetear banca mensual</white>"));
         sender.sendMessage(Text.parse("<gray>/supplies admin reset food <jugador> [rationId]</gray> - <white>Resetear raciones</white>"));
-        sender.sendMessage(Text.parse("<gray>/supplies admin givecheque <jugador> <monto></gray> - <white>Dar cheque legacy</white>"));
+        sender.sendMessage(Text.parse("<gray>/supplies admin givecheque <jugador> <monto></gray> - <white>Dar cheque de plata</white>"));
         sender.sendMessage(Text.parse("<gray>/supplies admin debug <jugador></gray> - <white>Ver info de debug</white>"));
     }
 
@@ -252,7 +253,7 @@ public class SuppliesCommand implements CommandExecutor, TabCompleter {
 
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("%player%", target.getName());
-        placeholders.put("%amount%", Text.formatMoney(amount));
+        placeholders.put("%amount%", Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount));
         sender.sendMessage(Text.parse(plugin.getConfigManager().getMessage("admin.give-cheque", placeholders)));
 
         return true;

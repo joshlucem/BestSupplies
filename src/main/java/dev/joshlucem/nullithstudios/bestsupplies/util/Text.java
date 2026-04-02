@@ -1,5 +1,6 @@
 package dev.joshlucem.nullithstudios.bestsupplies.util;
 
+import dev.joshlucem.nullithstudios.balance.api.BalanceApi;
 import dev.joshlucem.nullithstudios.bestsupplies.BestSupplies;
 import dev.joshlucem.nullithstudios.bestsupplies.config.ConfigManager;
 import net.kyori.adventure.text.Component;
@@ -178,5 +179,13 @@ public class Text {
             return String.format("%,d", (long) amount);
         }
         return String.format("%,.2f", amount);
+    }
+
+    public static String formatCurrency(BalanceApi.CurrencyType currency, double amount) {
+        String unit = switch (currency) {
+            case SILVER -> amount == 1D ? "moneda de plata" : "monedas de plata";
+            case GOLD -> amount == 1D ? "moneda de oro" : "monedas de oro";
+        };
+        return formatMoney(amount) + " " + unit;
     }
 }

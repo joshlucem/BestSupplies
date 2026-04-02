@@ -138,7 +138,8 @@ public class ConfigManager {
                     if (ms != null) {
                         StreakMilestone milestone = new StreakMilestone(
                                 streak,
-                                ms.getDouble("bonus-money", 0),
+                                ms.getDouble("bonus-silver", ms.getDouble("bonus-money", 0)),
+                                ms.getDouble("bonus-gold", 0),
                                 ms.getStringList("bonus-items"),
                                 ms.getString("message", "")
                         );
@@ -205,13 +206,14 @@ public class ConfigManager {
             icon = Material.CHEST;
         }
 
-        double money = section.getDouble("money", 0);
+        double silver = section.getDouble("silver", section.getDouble("money", 0));
+        double gold = section.getDouble("gold", 0);
         List<String> items = section.getStringList("items");
         List<String> commands = section.getStringList("commands");
         String displayName = section.getString("display-name", "Recompensa");
         List<String> description = section.getStringList("description");
 
-        return new DailyRewardDefinition(icon, money, items, commands, displayName, description);
+        return new DailyRewardDefinition(icon, silver, gold, items, commands, displayName, description);
     }
 
     private RewardBundle parseRewardBundle(ConfigurationSection parent, String path) {
@@ -284,7 +286,7 @@ public class ConfigManager {
         String displayName = section.getString("display-name", id);
         String category = section.getString("category", "user");
 
-        double weeklyMoney = section.getDouble("weekly-money", 0);
+        double weeklyMoney = section.getDouble("weekly-silver", section.getDouble("weekly-money", 0));
         String foodCooldownStr = section.getString("food-cooldown", "24h");
         long foodCooldownMs = parseDuration(foodCooldownStr);
 
@@ -293,14 +295,14 @@ public class ConfigManager {
         double monthlyStep = 0;
         Map<Integer, Double> monthlyOverrides = new LinkedHashMap<>();
         if (monthlySection != null) {
-            monthlyBase = monthlySection.getDouble("base", 0);
-            monthlyStep = monthlySection.getDouble("step", 0);
+            monthlyBase = monthlySection.getDouble("silver-base", monthlySection.getDouble("base", 0));
+            monthlyStep = monthlySection.getDouble("silver-step", monthlySection.getDouble("step", 0));
             ConfigurationSection overrides = monthlySection.getConfigurationSection("overrides");
             if (overrides != null) {
                 for (String key : overrides.getKeys(false)) {
                     try {
                         int day = Integer.parseInt(key);
-                        monthlyOverrides.put(day, overrides.getDouble(key));
+                        monthlyOverrides.put(day, overrides.getDouble(key + ".silver", overrides.getDouble(key)));
                     } catch (NumberFormatException ignored) {
                     }
                 }

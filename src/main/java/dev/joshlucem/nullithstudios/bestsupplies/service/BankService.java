@@ -1,5 +1,6 @@
 package dev.joshlucem.nullithstudios.bestsupplies.service;
 
+import dev.joshlucem.nullithstudios.balance.api.BalanceApi;
 import dev.joshlucem.nullithstudios.bestsupplies.BestSupplies;
 import dev.joshlucem.nullithstudios.bestsupplies.config.ConfigManager;
 import dev.joshlucem.nullithstudios.bestsupplies.model.ChequeData;
@@ -120,16 +121,20 @@ public class BankService {
             return MonthlyClaimResult.NO_REWARD;
         }
 
+        if (!plugin.getEconomyService().depositSilver(player, amount, "monthly-bank")) {
+            Text.sendPrefixed(player, configManager.getMessage("general.economy-error"), configManager);
+            return MonthlyClaimResult.ERROR;
+        }
+
         String claimKey = getMonthlyClaimKey(date);
         database.setWeeklyClaim(player.getUniqueId().toString(), claimKey, true);
-        plugin.getEconomy().depositPlayer(player, amount);
 
         Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("%amount%", Text.formatMoney(amount));
+        placeholders.put("%amount%", Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount));
         placeholders.put("%day%", String.valueOf(date.getDayOfMonth()));
         Text.sendPrefixed(player, configManager.getMessage("bank.monthly-claim-success", placeholders), configManager);
 
-        plugin.debug("Banca mensual reclamada por " + player.getName() + " dia " + date.getDayOfMonth() + " monto €" + amount);
+        plugin.debug("Banca mensual reclamada por " + player.getName() + " dia " + date.getDayOfMonth() + " monto " + Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount));
         return MonthlyClaimResult.SUCCESS;
     }
 
@@ -169,8 +174,6 @@ public class BankService {
         String weekKey = timeService.getCurrentWeeklyPeriodKey();
         String playerUuid = player.getUniqueId().toString();
 
-        database.setWeeklyClaim(playerUuid, weekKey, true);
-
         if (configManager.useChequeItem()) {
             String chequeId = ChequeData.generateChequeId();
             ChequeData cheque = new ChequeData(chequeId, playerUuid, weekKey, amount);
@@ -182,21 +185,28 @@ public class BankService {
                 player.getInventory().addItem(chequeItem);
 
                 Map<String, String> placeholders = new HashMap<>();
-                placeholders.put("%amount%", Text.formatMoney(amount));
+                placeholders.put("%amount%", Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount));
                 Text.sendPrefixed(player, configManager.getMessage("bank.cheque-received", placeholders), configManager);
             } else {
                 pendingService.saveChequeToPending(player, chequeId, amount, weekKey);
             }
+
+            database.setWeeklyClaim(playerUuid, weekKey, true);
         } else {
-            plugin.getEconomy().depositPlayer(player, amount);
+            if (!plugin.getEconomyService().depositSilver(player, amount, "weekly-bank")) {
+                Text.sendPrefixed(player, configManager.getMessage("general.economy-error"), configManager);
+                return ClaimResult.ERROR;
+            }
+
+            database.setWeeklyClaim(playerUuid, weekKey, true);
 
             Map<String, String> placeholders = new HashMap<>();
-            placeholders.put("%amount%", Text.formatMoney(amount));
+            placeholders.put("%amount%", Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount));
             Text.sendPrefixed(player, configManager.getMessage("bank.direct-deposit", placeholders), configManager);
         }
 
         Text.sendPrefixed(player, configManager.getMessage("bank.claim-success"), configManager);
-        plugin.debug("Cheque semanal reclamado por " + player.getName() + ": €" + amount);
+        plugin.debug("Cheque semanal reclamado por " + player.getName() + ": " + Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount));
 
         return ClaimResult.SUCCESS;
     }
@@ -214,7 +224,7 @@ public class BankService {
             String rankTag = rankService.getRankTag(player);
 
             Map<String, String> placeholders = new HashMap<>();
-            placeholders.put("%amount%", Text.formatMoney(amount));
+            placeholders.put("%amount%", Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount));
             placeholders.put("%bestsupplies_rank_tag%", rankTag);
             placeholders.put("%week%", weekKey);
 
@@ -279,15 +289,19 @@ public class BankService {
             return RedeemResult.ALREADY_REDEEMED;
         }
 
+        if (!plugin.getEconomyService().depositSilver(player, amount, "weekly-cheque-redeem")) {
+            Text.sendPrefixed(player, configManager.getMessage("general.economy-error"), configManager);
+            return RedeemResult.ERROR;
+        }
+
         database.redeemCheque(chequeId, System.currentTimeMillis());
-        plugin.getEconomy().depositPlayer(player, amount);
         chequeItem.setAmount(chequeItem.getAmount() - 1);
 
         Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("%amount%", Text.formatMoney(amount));
+        placeholders.put("%amount%", Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount));
         Text.sendPrefixed(player, configManager.getMessage("cheque.redeemed", placeholders), configManager);
 
-        plugin.debug("Cheque canjeado por " + player.getName() + ": €" + amount + " (ID: " + chequeId + ")");
+        plugin.debug("Cheque canjeado por " + player.getName() + ": " + Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount) + " (ID: " + chequeId + ")");
 
         return RedeemResult.SUCCESS;
     }
@@ -312,13 +326,13 @@ public class BankService {
             target.getInventory().addItem(chequeItem);
 
             Map<String, String> placeholders = new HashMap<>();
-            placeholders.put("%amount%", Text.formatMoney(amount));
+            placeholders.put("%amount%", Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount));
             Text.sendPrefixed(target, configManager.getMessage("bank.cheque-received", placeholders), configManager);
         } else {
             pendingService.saveChequeToPending(target, chequeId, amount, weekKey);
         }
 
-        plugin.debug("Cheque admin entregado a " + target.getName() + ": €" + amount);
+        plugin.debug("Cheque admin entregado a " + target.getName() + ": " + Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount));
     }
 
     public boolean isChequeItem(ItemStack item) {
@@ -345,14 +359,16 @@ public class BankService {
         ALREADY_CLAIMED,
         LOCKED,
         NO_RANK,
-        NO_REWARD
+        NO_REWARD,
+        ERROR
     }
 
     public enum ClaimResult {
         SUCCESS,
         ALREADY_CLAIMED,
         NO_RANK,
-        NO_REWARD
+        NO_REWARD,
+        ERROR
     }
 
     public enum RedeemResult {
@@ -360,6 +376,7 @@ public class BankService {
         NOT_A_CHEQUE,
         INVALID,
         NOT_OWNER,
-        ALREADY_REDEEMED
+        ALREADY_REDEEMED,
+        ERROR
     }
 }

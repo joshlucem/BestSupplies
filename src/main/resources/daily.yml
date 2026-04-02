@@ -5,7 +5,7 @@
 rewards:
   MONDAY:
     icon: LIME_DYE
-    money: 250
+    silver: 250
     items:
       - "BREAD:4"
       - "TORCH:16"
@@ -15,7 +15,7 @@ rewards:
 
   TUESDAY:
     icon: LIME_DYE
-    money: 275
+    silver: 275
     items:
       - "COOKED_BEEF:4"
       - "COAL:12"
@@ -25,7 +25,7 @@ rewards:
 
   WEDNESDAY:
     icon: LIME_DYE
-    money: 300
+    silver: 300
     items:
       - "IRON_INGOT:3"
       - "BREAD:4"
@@ -35,7 +35,7 @@ rewards:
 
   THURSDAY:
     icon: LIME_DYE
-    money: 325
+    silver: 325
     items:
       - "EXPERIENCE_BOTTLE:8"
       - "GOLDEN_CARROT:4"
@@ -45,7 +45,7 @@ rewards:
 
   FRIDAY:
     icon: LIME_DYE
-    money: 350
+    silver: 350
     items:
       - "DIAMOND:1"
       - "LAPIS_LAZULI:10"
@@ -55,7 +55,7 @@ rewards:
 
   SATURDAY:
     icon: LIME_DYE
-    money: 400
+    silver: 400
     items:
       - "EMERALD:1"
       - "GOLD_INGOT:4"
@@ -65,7 +65,7 @@ rewards:
 
   SUNDAY:
     icon: LIME_DYE
-    money: 500
+    silver: 500
     items:
       - "GOLDEN_APPLE:1"
       - "EXPERIENCE_BOTTLE:16"
@@ -75,18 +75,20 @@ rewards:
 
 streak-milestones:
   7:
-    bonus-money: 500
+    bonus-silver: 500
     bonus-items:
       - "GOLDEN_APPLE:1"
     message: "<gold>7 dias de racha. Bonus entregado.</gold>"
   14:
-    bonus-money: 1200
+    bonus-silver: 1200
+    bonus-gold: 1
     bonus-items:
       - "DIAMOND:2"
       - "EXPERIENCE_BOTTLE:24"
     message: "<gold>14 dias de racha. Excelente constancia.</gold>"
   30:
-    bonus-money: 3500
+    bonus-silver: 3500
+    bonus-gold: 2
     bonus-items:
       - "NETHERITE_SCRAP:1"
       - "ANCIENT_DEBRIS:2"

@@ -107,8 +107,11 @@ public class DailyGui extends BaseGui {
         if (reward != null) {
             lore.add("");
             lore.add("<gray>Recompensa:</gray>");
-            if (reward.hasMoney()) {
-                lore.add("<gray>- Dinero: <gold>€" + Text.formatMoney(reward.getMoney()) + "</gold></gray>");
+            if (reward.hasSilver()) {
+                lore.add("<gray>- Plata: <gold>" + Text.formatMoney(reward.getSilverAmount()) + "</gold></gray>");
+            }
+            if (reward.hasGold()) {
+                lore.add("<gray>- Oro: <gold>" + Text.formatMoney(reward.getGoldAmount()) + "</gold></gray>");
             }
             int shown = 0;
             for (String itemStr : reward.getItems()) {
@@ -116,7 +119,7 @@ public class DailyGui extends BaseGui {
                     lore.add("<gray>- ...</gray>");
                     break;
                 }
-                lore.add("<gray>- " + itemStr + "</gray>");
+                lore.add("<gray>- " + ItemParser.describeItemString(itemStr) + "</gray>");
                 shown++;
             }
         }

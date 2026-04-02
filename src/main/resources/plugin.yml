@@ -7,7 +7,7 @@ author: JoshLucem
 website: https://github.com/JoshLucem/BestSupplies
 
 depend:
-  - Vault
+  - Balance
 
 softdepend:
   - LuckPerms

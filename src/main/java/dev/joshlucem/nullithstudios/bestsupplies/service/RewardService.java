@@ -1,5 +1,6 @@
 package dev.joshlucem.nullithstudios.bestsupplies.service;
 
+import dev.joshlucem.nullithstudios.balance.api.BalanceApi;
 import dev.joshlucem.nullithstudios.bestsupplies.BestSupplies;
 import dev.joshlucem.nullithstudios.bestsupplies.config.ConfigManager;
 import dev.joshlucem.nullithstudios.bestsupplies.model.DailyRewardDefinition;
@@ -38,21 +39,30 @@ public class RewardService {
         double bonusMultiplier = getStreakBonusMultiplier(streak);
         int itemBonus = getStreakItemBonus(streak);
 
-        // Give money with bonus
-        if (reward.hasMoney()) {
-            double money = reward.getMoney();
-            double bonusMoney = money * bonusMultiplier;
-            double total = money + bonusMoney;
-            
-            plugin.getEconomy().depositPlayer(player, total);
-            
-            Map<String, String> placeholders = new HashMap<>();
-            placeholders.put("%amount%", Text.formatMoney(total));
-            Text.sendPrefixed(player, configManager.getMessage("daily.claim-money", placeholders), configManager);
-            
-            if (bonusMoney > 0) {
-                placeholders.put("%bonus%", String.valueOf((int)(bonusMultiplier * 100)));
-                Text.sendPrefixed(player, configManager.getMessage("daily.streak-bonus", placeholders), configManager);
+        // Silver is the regular currency used for daily payouts.
+        if (reward.hasSilver()) {
+            double silver = reward.getSilverAmount();
+            double bonusSilver = silver * bonusMultiplier;
+            double totalSilver = silver + bonusSilver;
+
+            if (plugin.getEconomyService().depositSilver(player, totalSilver, "daily-reward")) {
+                sendCurrencyRewardMessage(player, BalanceApi.CurrencyType.SILVER, totalSilver);
+                if (bonusSilver > 0) {
+                    Map<String, String> placeholders = new HashMap<>();
+                    placeholders.put("%bonus%", String.valueOf((int) (bonusMultiplier * 100)));
+                    Text.sendPrefixed(player, configManager.getMessage("daily.streak-bonus", placeholders), configManager);
+                }
+            } else {
+                Text.sendPrefixed(player, configManager.getMessage("general.economy-error"), configManager);
+            }
+        }
+
+        // Direct gold rewards should remain rare and intentionally configured.
+        if (reward.hasGold()) {
+            if (plugin.getEconomyService().depositGold(player, reward.getGoldAmount(), "daily-reward-gold")) {
+                sendCurrencyRewardMessage(player, BalanceApi.CurrencyType.GOLD, reward.getGoldAmount());
+            } else {
+                Text.sendPrefixed(player, configManager.getMessage("general.economy-error"), configManager);
             }
         }
 
@@ -96,13 +106,20 @@ public class RewardService {
     private void giveStreakMilestoneBonus(Player player, StreakMilestone milestone) {
         plugin.debug("Entregando bonus de milestone para racha " + milestone.getStreakDay());
 
-        // Give bonus money
-        if (milestone.hasBonusMoney()) {
-            plugin.getEconomy().depositPlayer(player, milestone.getBonusMoney());
-            
-            Map<String, String> placeholders = new HashMap<>();
-            placeholders.put("%amount%", Text.formatMoney(milestone.getBonusMoney()));
-            Text.sendPrefixed(player, configManager.getMessage("daily.claim-money", placeholders), configManager);
+        if (milestone.hasBonusSilver()) {
+            if (plugin.getEconomyService().depositSilver(player, milestone.getBonusSilver(), "daily-streak-milestone-silver")) {
+                sendCurrencyRewardMessage(player, BalanceApi.CurrencyType.SILVER, milestone.getBonusSilver());
+            } else {
+                Text.sendPrefixed(player, configManager.getMessage("general.economy-error"), configManager);
+            }
+        }
+
+        if (milestone.hasBonusGold()) {
+            if (plugin.getEconomyService().depositGold(player, milestone.getBonusGold(), "daily-streak-milestone-gold")) {
+                sendCurrencyRewardMessage(player, BalanceApi.CurrencyType.GOLD, milestone.getBonusGold());
+            } else {
+                Text.sendPrefixed(player, configManager.getMessage("general.economy-error"), configManager);
+            }
         }
 
         // Give bonus items
@@ -206,5 +223,11 @@ public class RewardService {
 
         List<ItemStack> items = ItemParser.parseItems(itemStrings);
         giveItemsOrPending(player, items);
+    }
+
+    private void sendCurrencyRewardMessage(Player player, BalanceApi.CurrencyType currency, double amount) {
+        Map<String, String> placeholders = new HashMap<>();
+        placeholders.put("%amount%", Text.formatCurrency(currency, amount));
+        Text.sendPrefixed(player, configManager.getMessage("daily.claim-money", placeholders), configManager);
     }
 }

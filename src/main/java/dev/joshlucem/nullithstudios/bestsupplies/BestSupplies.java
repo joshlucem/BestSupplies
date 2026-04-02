@@ -10,8 +10,6 @@ import dev.joshlucem.nullithstudios.bestsupplies.service.*;
 import dev.joshlucem.nullithstudios.bestsupplies.storage.Database;
 import dev.joshlucem.nullithstudios.bestsupplies.storage.MysqlDatabase;
 import dev.joshlucem.nullithstudios.bestsupplies.storage.SqliteDatabase;
-import net.milkbowl.vault.economy.Economy;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Level;
@@ -22,7 +20,7 @@ public class BestSupplies extends JavaPlugin {
     
     private ConfigManager configManager;
     private Database database;
-    private Economy economy;
+    private EconomyService economyService;
     
     private TimeService timeService;
     private RankService rankService;
@@ -42,9 +40,9 @@ public class BestSupplies extends JavaPlugin {
         configManager = new ConfigManager(this);
         configManager.loadAll();
         
-        // Setup Vault economy
+        // Setup Balance economy
         if (!setupEconomy()) {
-            getLogger().severe("Vault no encontrado o sin economia. El plugin no puede funcionar.");
+            getLogger().severe("Balance no encontrado o sin API disponible. El plugin no puede funcionar.");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -98,15 +96,8 @@ public class BestSupplies extends JavaPlugin {
     }
 
     private boolean setupEconomy() {
-        if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            return false;
-        }
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null) {
-            return false;
-        }
-        economy = rsp.getProvider();
-        return economy != null;
+        economyService = new EconomyService(this);
+        return economyService.initialize();
     }
 
     private boolean initializeDatabase() {
@@ -159,8 +150,8 @@ public class BestSupplies extends JavaPlugin {
         return database;
     }
 
-    public Economy getEconomy() {
-        return economy;
+    public EconomyService getEconomyService() {
+        return economyService;
     }
 
     public TimeService getTimeService() {

@@ -1,5 +1,6 @@
 package dev.joshlucem.nullithstudios.bestsupplies.gui;
 
+import dev.joshlucem.nullithstudios.balance.api.BalanceApi;
 import dev.joshlucem.nullithstudios.bestsupplies.BestSupplies;
 import dev.joshlucem.nullithstudios.bestsupplies.service.BankService;
 import dev.joshlucem.nullithstudios.bestsupplies.util.ItemParser;
@@ -96,7 +97,7 @@ public class BankGui extends BaseGui {
         Map<String, String> placeholders = Map.of(
                 "%day%", String.valueOf(date.getDayOfMonth()),
                 "%month%", monthName,
-                "%amount%", Text.formatMoney(plugin.getBankService().getMonthlyAmount(player, date))
+                "%amount%", Text.formatCurrency(BalanceApi.CurrencyType.SILVER, plugin.getBankService().getMonthlyAmount(player, date))
         );
 
         if (status == BankService.MonthlyDayStatus.LOCKED) {
@@ -104,7 +105,8 @@ public class BankGui extends BaseGui {
                     plugin.getConfigManager().getItemsAdderIcon("lock", "mcicons:icon_lock"),
                     Material.BARRIER,
                     plugin.getConfigManager().getMessage("gui.bank.day-locked", placeholders),
-                    plugin.getConfigManager().getMessageList("gui.bank.day-locked-lore")
+                    getMessageList("gui.bank.day-locked-lore", placeholders),
+                    placeholders
             );
         }
 
@@ -112,14 +114,16 @@ public class BankGui extends BaseGui {
             return ItemParser.createItem(
                     Material.PAPER,
                     plugin.getConfigManager().getMessage("gui.bank.day-claimed", placeholders),
-                    plugin.getConfigManager().getMessageList("gui.bank.day-claimed-lore")
+                    getMessageList("gui.bank.day-claimed-lore", placeholders),
+                    placeholders
             );
         }
 
         return ItemParser.createItem(
                 Material.PAPER,
                 plugin.getConfigManager().getMessage("gui.bank.day-available", placeholders),
-                plugin.getConfigManager().getMessageList("gui.bank.day-available-lore")
+                getMessageList("gui.bank.day-available-lore", placeholders),
+                placeholders
         );
     }
 

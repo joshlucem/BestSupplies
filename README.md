@@ -19,7 +19,7 @@ A feature-rich Minecraft plugin providing daily rewards, weekly bank cheques, an
 ### Weekly Bank Cheque
 - Physical cheque item given to inventory
 - Anti-duplication via UUID tracking in database
-- Right-click to redeem for Vault economy balance
+- Right-click to redeem into the Balance economy
 - If inventory is full, cheque goes to pending deliveries
 - Weekly reset configurable (default: Monday)
 
@@ -119,7 +119,7 @@ days:
     display_name: "<gold>Lunes Dorado</gold>"
     description:
       - "<gray>Empieza la semana</gray>"
-    money: 100.0
+    silver: 100.0
     items:
       - "BREAD:16"
     commands: []
@@ -132,7 +132,7 @@ ranks:
   - id: "netherite"
     permission: "bestsupplies.rank.netherite"
     display_name: "<dark_red>Netherite</dark_red>"
-    weekly_money: 5000.0
+    weekly-silver: 5000.0
     food_cooldown: "6h"
     packs:
       exploracion:
@@ -147,7 +147,7 @@ ranks:
 
 ### Required
 - **Paper 1.21.10+** - Server software
-- **Vault** - Economy integration
+- **Balance** - Multi-currency economy integration
 
 ### Optional
 - **PlaceholderAPI** - Placeholder support
@@ -171,8 +171,8 @@ ranks:
 
 1. Download the latest release
 2. Place `BestSupplies.jar` in your server's `plugins` folder
-3. Install **Vault** if not already installed
-4. Install an economy plugin (EssentialsX, CMI, etc.)
+3. Install **Balance** on the server
+4. Install **Vault** as required by Balance
 5. Start/restart your server
 6. Configure files in `plugins/BestSupplies/`
 7. Use `/supplies admin reload` to apply changes
@@ -196,7 +196,7 @@ mvn clean package
 
 - Java 21 or higher
 - Paper 1.21.10 or compatible fork
-- Vault economy plugin
+- Balance plugin
 
 ## License
 

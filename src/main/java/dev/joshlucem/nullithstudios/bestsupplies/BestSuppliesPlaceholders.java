@@ -1,7 +1,9 @@
 package dev.joshlucem.nullithstudios.bestsupplies;
 
+import dev.joshlucem.nullithstudios.balance.api.BalanceApi;
 import dev.joshlucem.nullithstudios.bestsupplies.model.PlayerState;
 import dev.joshlucem.nullithstudios.bestsupplies.model.RankDefinition;
+import dev.joshlucem.nullithstudios.bestsupplies.util.Text;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -123,7 +125,7 @@ public class BestSuppliesPlaceholders extends PlaceholderExpansion {
     private String getMonthlyTodayAmount(Player player) {
         java.time.LocalDate today = plugin.getTimeService().getCurrentDate();
         double amount = plugin.getBankService().getMonthlyAmount(player, today);
-        return "€" + String.format("%,.2f", amount);
+        return Text.formatCurrency(BalanceApi.CurrencyType.SILVER, amount);
     }
 
     private String getNextDaily() {

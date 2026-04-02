@@ -19,98 +19,98 @@ ranks:
     permission: ""
     category: free
     display-name: "<gradient:#41444a:#1c2127>Default</gradient>"
-    weekly-money: 0
+    weekly-silver: 0
     food-cooldown: "24h"
     monthly-bank:
-      base: 120
-      step: 10
+      silver-base: 120
+      silver-step: 10
 
   coal:
     permission: "bestsupplies.rank.coal"
     category: free
     display-name: "<gradient:#68686b:#808084>Coal</gradient>"
-    weekly-money: 0
+    weekly-silver: 0
     food-cooldown: "24h"
     monthly-bank:
-      base: 150
-      step: 12
+      silver-base: 150
+      silver-step: 12
 
   boost:
     permission: "bestsupplies.rank.boost"
     category: partner
     display-name: "<gradient:#f472b6:#8b5cf6>Booster</gradient>"
-    weekly-money: 0
+    weekly-silver: 0
     food-cooldown: "20h"
     monthly-bank:
-      base: 180
-      step: 14
+      silver-base: 180
+      silver-step: 14
 
   influencer:
     permission: "bestsupplies.rank.influencer"
     category: partner
     display-name: "<gradient:#fb923c:#c2410c>Influencer</gradient>"
-    weekly-money: 0
+    weekly-silver: 0
     food-cooldown: "18h"
     monthly-bank:
-      base: 220
-      step: 16
+      silver-base: 220
+      silver-step: 16
 
   iron:
     permission: "bestsupplies.rank.iron"
     category: premium
     display-name: "<gradient:#d1d5db:#6b7280>Iron</gradient>"
-    weekly-money: 0
+    weekly-silver: 0
     food-cooldown: "16h"
     monthly-bank:
-      base: 280
-      step: 20
+      silver-base: 280
+      silver-step: 20
 
   gold:
     permission: "bestsupplies.rank.gold"
     category: premium
     display-name: "<gradient:#facc15:#a16207>Gold</gradient>"
-    weekly-money: 0
+    weekly-silver: 0
     food-cooldown: "14h"
     monthly-bank:
-      base: 340
-      step: 24
+      silver-base: 340
+      silver-step: 24
 
   diamond:
     permission: "bestsupplies.rank.diamond"
     category: premium
     display-name: "<gradient:#67e8f9:#0284c7>Diamond</gradient>"
-    weekly-money: 0
+    weekly-silver: 0
     food-cooldown: "12h"
     monthly-bank:
-      base: 420
-      step: 30
+      silver-base: 420
+      silver-step: 30
 
   emerald:
     permission: "bestsupplies.rank.emerald"
     category: premium
     display-name: "<gradient:#4ade80:#166534>Emerald</gradient>"
-    weekly-money: 0
+    weekly-silver: 0
     food-cooldown: "11h"
     monthly-bank:
-      base: 520
-      step: 36
+      silver-base: 520
+      silver-step: 36
 
   ruby:
     permission: "bestsupplies.rank.ruby"
     category: premium
     display-name: "<gradient:#f87171:#7f1d1d>Ruby</gradient>"
-    weekly-money: 0
+    weekly-silver: 0
     food-cooldown: "10h"
     monthly-bank:
-      base: 650
-      step: 44
+      silver-base: 650
+      silver-step: 44
 
   netherite:
     permission: "bestsupplies.rank.netherite"
     category: premium
     display-name: "<gradient:#4b5563:#030712>Netherite</gradient>"
-    weekly-money: 0
+    weekly-silver: 0
     food-cooldown: "9h"
     monthly-bank:
-      base: 800
-      step: 55
+      silver-base: 800
+      silver-step: 55

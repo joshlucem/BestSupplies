@@ -10,30 +10,31 @@ general:
   player-not-found: "<red>Jugador no encontrado: %player%</red>"
   reload-success: "<green>Configuracion recargada correctamente.</green>"
   invalid-command: "<red>Comando invalido. Usa /supplies.</red>"
+  economy-error: "<red>No se pudo acreditar la recompensa economica. Intentalo nuevamente o avisa a un admin.</red>"
 
 daily:
   claim-success: "<green>Has reclamado tu recompensa diaria.</green>"
-  claim-money: "<gold>+€%amount%</gold>"
+  claim-money: "<gold>+%amount%</gold>"
   already-claimed: "<yellow>Ya reclamaste la recompensa de hoy.</yellow>"
   streak-bonus: "<gold>Bonus de racha aplicado (+%bonus%%).</gold>"
   streak-milestone: "<gold>Hito de racha alcanzado.</gold>"
   streak-lost: "<red>Tu racha se reinicio por inactividad.</red>"
 
 bank:
-  monthly-claim-success: "<green>Reclamaste la banca mensual del dia %day% (+€%amount%).</green>"
+  monthly-claim-success: "<green>Reclamaste la banca mensual del dia %day% (+%amount%).</green>"
   claim-success: "<green>Has reclamado tu cheque semanal.</green>"
-  cheque-received: "<gold>Recibiste un cheque por €%amount%.</gold>"
-  direct-deposit: "<gold>Se depositaron €%amount% en tu cuenta.</gold>"
+  cheque-received: "<gold>Recibiste un cheque por %amount%.</gold>"
+  direct-deposit: "<gold>Se depositaron %amount% en tu cuenta.</gold>"
 
 cheque:
-  item-name: "<gold>Cheque Semanal</gold>"
+  item-name: "<gold>Cheque Semanal de Plata</gold>"
   lore:
-    - "<gray>Monto: <gold>€%amount%</gold></gray>"
+    - "<gray>Monto: <gold>%amount%</gold></gray>"
     - "<gray>Tag: %bestsupplies_rank_tag%</gray>"
     - "<gray>Periodo: %week%</gray>"
     - ""
     - "<yellow>Clic derecho para canjear</yellow>"
-  redeemed: "<green>Cheque canjeado. +€%amount%</green>"
+  redeemed: "<green>Cheque canjeado. +%amount%</green>"
   invalid: "<red>Este cheque es invalido o ya no existe.</red>"
   not-owner: "<red>Este cheque no te pertenece.</red>"
   already-redeemed: "<red>Este cheque ya fue canjeado.</red>"
@@ -89,11 +90,11 @@ gui:
       - "<gray>Esta recompensa aun no se desbloquea.</gray>"
     day-claimed: "<gray>Dia %day% de %month% - Reclamado</gray>"
     day-claimed-lore:
-      - "<gray>Monto: <gold>€%amount%</gold></gray>"
+      - "<gray>Monto: <gold>%amount%</gold></gray>"
       - "<gray>Ya fue reclamado.</gray>"
     day-available: "<green>Dia %day% de %month% - Disponible</green>"
     day-available-lore:
-      - "<gray>Monto: <gold>€%amount%</gold></gray>"
+      - "<gray>Monto: <gold>%amount%</gold></gray>"
       - "<green>Clic para reclamar.</green>"
     info-item: "<gold>Info de Banca Mensual</gold>"
     info-lore:
@@ -156,7 +157,7 @@ admin:
   reset-daily: "<green>Diaria reiniciada para %player%.</green>"
   reset-bank: "<green>Banca mensual reiniciada para %player% en dia %day%.</green>"
   reset-food: "<green>Cooldowns de raciones reiniciados para %player%.</green>"
-  give-cheque: "<green>Cheque legacy de €%amount% entregado a %player%.</green>"
+  give-cheque: "<green>Cheque por %amount% entregado a %player%.</green>"
   debug-header: "<gold>=== Debug de %player% ===</gold>"
   debug-streak: "<gray>Racha: %streak%</gray>"
   debug-last-daily: "<gray>Ultima diaria: %date%</gray>"

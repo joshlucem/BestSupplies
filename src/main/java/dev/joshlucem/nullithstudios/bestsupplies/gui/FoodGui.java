@@ -98,7 +98,7 @@ public class FoodGui extends BaseGui {
                 String time = plugin.getFoodService().formatTimeUntilAvailable(player, ration.getId());
                 lore.add("<yellow>Disponible en: " + time + "</yellow>");
                 return ItemParser.createItem(
-                        resolveBaseIcon(ration.getIcon()),
+                        Material.ORANGE_DYE,
                         plugin.getConfigManager().getMessage("gui.food.ration-cooldown", Map.of("%ration%", ration.getDisplayName(), "%time%", time)),
                         lore,
                         null
@@ -147,7 +147,7 @@ public class FoodGui extends BaseGui {
                     lore.add("<gray>- ...</gray>");
                     return;
                 }
-                lore.add("<gray>- " + reward + "</gray>");
+                lore.add("<gray>- " + ItemParser.describeItemString(reward) + "</gray>");
                 shown++;
             }
         }
